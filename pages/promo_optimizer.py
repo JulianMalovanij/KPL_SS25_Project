@@ -4,7 +4,6 @@ from data_loader import load_data
 from optimizations import run_promotion_sales_optimization
 from visualizations import plot_promotion_optimization
 
-st.set_page_config(page_title="Promotion Optimierung", layout="wide")
 st.title("Promotion Optimierung mit Walmart-Daten")
 df_sales, df_features, df_stores = load_data()
 
