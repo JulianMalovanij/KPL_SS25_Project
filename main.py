@@ -14,12 +14,13 @@ promo_optimizer_depts = st.Page("pages/promotion_optimizer/promo_optimizer_depar
                                 title="Department Promotion optimizer")
 util_page = st.Page("pages/util.py", title="Verwaltung")
 descriptive_page = st.Page("pages/descriptive_analysis.py", title="Deskriptive Analyse")
+forecast_page = st.Page("pages/forecast.py", title="Vorhersage")
 
 # Hier werden die Seiten den Navigationskategorien zugeordnet
 pg = st.navigation({
     "Home": [main_page, util_page],
     "Optimizer": [promo_optimizer_stores, promo_optimizer_depts],
-    "KI": [],
+    "KI": [forecast_page],
     "Deskriptive Analyse": [descriptive_page],
 })
 pg.run()
