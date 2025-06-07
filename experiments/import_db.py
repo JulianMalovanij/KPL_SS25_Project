@@ -1,23 +1,24 @@
-import pandas as pd
 import sqlite3
+
+import pandas as pd
 
 # ----------------------------------------
 # 1) Verbindung zur SQLite-Datenbank
 # ----------------------------------------
 # Wenn "walmart.db" noch nicht existiert, wird es neu angelegt.
-conn = sqlite3.connect("walmart.db")
+conn = sqlite3.connect("walmart_old.db")
 
 # ----------------------------------------
 # 2) CSVs mit pandas einlesen
 # ----------------------------------------
 # Passe den Pfad an, falls deine CSVs an anderer Stelle liegen.
-df_stores   = pd.read_csv("data/stores.csv")    # Spalten: Store, Type, Size
-df_features = pd.read_csv("data/features.csv")  # Spalten: Store, Date, Temperature, …, IsHoliday
-df_train    = pd.read_csv("data/train.csv")     # Spalten: Store, Dept, Date, Weekly_Sales, IsHoliday
+df_stores = pd.read_csv("../data/stores.csv")  # Spalten: Store, Type, Size
+df_features = pd.read_csv("../data/features.csv")  # Spalten: Store, Date, Temperature, …, IsHoliday
+df_train = pd.read_csv("../data/train.csv")  # Spalten: Store, Dept, Date, Weekly_Sales, IsHoliday
 
 # Datumsspalten in pandas-Datetime umwandeln
 df_features["Date"] = pd.to_datetime(df_features["Date"], format="%Y-%m-%d")
-df_train   ["Date"] = pd.to_datetime(df_train["Date"],   format="%Y-%m-%d")
+df_train["Date"] = pd.to_datetime(df_train["Date"], format="%Y-%m-%d")
 
 # ----------------------------------------
 # 3) Tabellen automatisch mit to_sql erstellen
@@ -33,15 +34,15 @@ df_stores.to_sql("Store", conn, if_exists="replace", index=False)
 # Spalten umbenennen, damit sie ohne Leerzeichen in SQLite landen
 df_feat = df_features.rename(
     columns={
-        "Store":        "StoreID",
-        "Fuel_Price":   "FuelPrice",
-        "IsHoliday":    "IsHoliday",
-        "MarkDown1":    "MarkDown1",
-        "MarkDown2":    "MarkDown2",
-        "MarkDown3":    "MarkDown3",
-        "MarkDown4":    "MarkDown4",
-        "MarkDown5":    "MarkDown5",
-        "CPI":          "CPI",
+        "Store": "StoreID",
+        "Fuel_Price": "FuelPrice",
+        "IsHoliday": "IsHoliday",
+        "MarkDown1": "MarkDown1",
+        "MarkDown2": "MarkDown2",
+        "MarkDown3": "MarkDown3",
+        "MarkDown4": "MarkDown4",
+        "MarkDown5": "MarkDown5",
+        "CPI": "CPI",
         "Unemployment": "Unemployment",
     }
 )
@@ -50,10 +51,10 @@ df_feat.to_sql("StoreFeature", conn, if_exists="replace", index=False)
 # 3.3) WeeklySales-Tabelle (Train-Daten)
 df_sales = df_train.rename(
     columns={
-        "Store":        "StoreID",
-        "Dept":         "DeptID",
+        "Store": "StoreID",
+        "Dept": "DeptID",
         "Weekly_Sales": "WeeklySales",
-        "IsHoliday":    "IsHoliday",
+        "IsHoliday": "IsHoliday",
     }
 )
 df_sales.to_sql("WeeklySales", conn, if_exists="replace", index=False)
