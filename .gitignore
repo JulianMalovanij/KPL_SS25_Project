@@ -6,12 +6,6 @@ project.lock.json
 *.pyc
 nupkg/
 
-# Visual Studio Code
-.vscode
-
-# Rider
-.idea
-
 # User-specific files
 *.suo
 *.user
@@ -41,6 +35,7 @@ msbuild.wrn
 ### VisualStudioCode template
 .vscode/*
 !.vscode/settings.json
+!.vscode/settings.windows.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
