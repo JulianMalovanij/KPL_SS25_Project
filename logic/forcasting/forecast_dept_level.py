@@ -6,6 +6,7 @@ from pmdarima import auto_arima
 from prophet import Prophet
 from sklearn.preprocessing import MinMaxScaler
 
+import data_loader
 from data_writer import save_prophet_forecast, save_arima_forecast, save_lstm_forecast
 
 
@@ -72,3 +73,7 @@ def run_forecast(history, model_option, store_id, dept_id):
     elif model_option == "LSTM":
         forecast, future_index = lstm_forecast(history)
         save_lstm_forecast(forecast, future_index, store_id, dept_id)
+
+    # Clear cache
+    data_loader.load_forecast_data.clear(model_option, store_id, dept_id)
+    data_loader.load_full_forecast_data.clear()

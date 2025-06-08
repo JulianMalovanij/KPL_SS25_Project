@@ -17,7 +17,6 @@ def run_single_store_dept_optimization(args):
 
     # Filter nur auf aktuellen Store/Dept
     filtered_sales = df_sales[(df_sales["StoreID"] == store_id) & (df_sales["DeptID"] == dept_id)].copy()
-
     try:
         return run_promotion_sales_optimization(
             filtered_sales,
@@ -47,7 +46,7 @@ def run_promotion_sales_optimization_all(df_sales, df_features,
                                          parallel=True,
                                          solver_timeout=150):
     # Queue für Statusupdates
-    manager = multiprocessing.Manager()
+    manager = multiprocessing.Manager()  # Erzeugt eine Warnung, die kann aber ignoriert werden!
     status_queue = manager.Queue()
 
     unique_pairs = df_sales[["StoreID", "DeptID"]].drop_duplicates().dropna().values.tolist()
@@ -66,6 +65,7 @@ def run_promotion_sales_optimization_all(df_sales, df_features,
     args = [(store_id, dept_id, df_sales, df_features, params, status_queue) for store_id, dept_id in
             unique_pairs]
 
+    print("Event")
     stop_event = start_ui_status_updater(ui_status, status_queue, total)
 
     if parallel:
@@ -109,8 +109,8 @@ def run_promotion_sales_optimization(df_sales, df_features,
     weekly_sales_raw = df_sales.groupby(["StoreID", "DeptID", "Year", "Week"])["WeeklySales"].mean().reset_index()
 
     # Ausreißerentfernung
-    weekly_sales = weekly_sales_raw.groupby(["StoreID", "DeptID"], group_keys=False).apply(remove_outliers).reset_index(
-        drop=True)
+    weekly_sales = (weekly_sales_raw.groupby(["StoreID", "DeptID"], group_keys=False)[weekly_sales_raw.columns]
+                    .apply(remove_outliers).reset_index(drop=True))
 
     # Feiertage entfernen
     df_merged = pd.merge(
@@ -257,6 +257,9 @@ def run_promotion_sales_optimization(df_sales, df_features,
 
 # IQR Methode zur Ausreißerentfernung
 def remove_outliers(df):
+    if "WeeklySales" not in df.columns:
+        return df
+
     series = df["WeeklySales"]
     q1 = series.quantile(0.25)
     q3 = series.quantile(0.75)

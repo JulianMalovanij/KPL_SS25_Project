@@ -37,7 +37,7 @@ def start_ui_status_updater(ui_status, status_queue, total=None):
 
                 key = (store_id, dept_id)
                 with parallel_status_lock:
-                    if label is None or state != "running":  # Signal zur Entfernung (z.B. bei Abschluss)
+                    if label is None or state != "running":  # Signal zur Entfernung
                         parallel_status_map.pop(key, None)
                         completed_set.add(key)
                     else:

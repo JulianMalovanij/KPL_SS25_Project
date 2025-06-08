@@ -2,8 +2,9 @@ import traceback
 
 import streamlit as st
 
+import data_loader
 import import_product_db
-from data_loader import load_data
+from layout import with_layout
 from logic.forcasting.forecast_dept_level import run_forecast
 
 available_models = ["Prophet", "ARIMA", "LSTM"]
@@ -15,7 +16,7 @@ if "tool_predict" not in st.session_state:
 
 
 def do_prediction(models):
-    df_sales, df_features, df_stores = load_data()
+    df_sales, df_features, df_stores = data_loader.load_data()
 
     # Alle eindeutigen Kombinationen aus StoreID und DeptID
     combinations = df_sales[["StoreID", "DeptID"]].drop_duplicates()
@@ -56,45 +57,53 @@ def do_prediction(models):
 
 
 # ---------- Seite ----------
-st.title("Verwaltungstools")
+@with_layout("Verwaltungstools")
+def page():
+    st.warning("Diese Tools können das Programm empfindlich stören, unbrauchbar machen oder extrem lange andauern.")
 
-st.warning("Diese Tools können das Programm empfindlich stören, unbrauchbar machen oder extrem lange andauern.")
+    # Logik
+    # Importiere die Datenbank
+    if st.session_state["tool_import_db"]:
+        with st.status("Lösche alte Datenbank... Bitte warten!", state="running") as ui_status:
+            try:
+                import_product_db.drop()
+                ui_status.update(label="Importiere die Datensätze... Bitte warten!")
+                import_product_db.do_import()
+                data_loader.load_data.clear()
+                data_loader.load_product_data.clear()
+                ui_status.update(label="Import abgeschlossen.", state="complete")
 
-# Logik
-# Importiere die Datenbank
-if st.session_state["tool_import_db"]:
-    with st.status("Lösche alte Datenbank... Bitte warten!", state="running") as ui_status:
-        try:
-            import_product_db.drop()
-            ui_status.update(label="Importiere die Datensätze... Bitte warten!")
-            import_product_db.do_import()
-            ui_status.update(label="Import abgeschlossen.", state="complete")
+            except Exception as e:
+                traceback.print_exc()
+                ui_status.update(label=f"Fehler: {e}", state="error")
 
-        except Exception as e:
-            traceback.print_exc()
-            ui_status.update(label=f"Fehler: {e}", state="error")
+            finally:
+                st.session_state["tool_import_db"] = False
 
-        finally:
-            st.session_state["tool_import_db"] = False
+    st.write("### Datenbank aufräumen")
+    # Datenbank-Button
+    if not st.session_state["tool_import_db"]:
+        st.button("Datenbank (erneut) importieren", key="do_import_db_trigger",
+                  on_click=lambda: st.session_state.update({"tool_import_db": True}))
 
-st.write("### Datenbank aufräumen")
-# Datenbank-Button
-if not st.session_state["tool_import_db"]:
-    st.button("Datenbank importieren", key="do_import_db_trigger",
-              on_click=lambda: st.session_state.update({"tool_import_db": True}))
+    st.button("Cache leeren", key="do_clear_cache_trigger",
+              on_click=lambda: st.cache_data.clear())
 
-st.divider()
-st.write("### Prognosen neu erstellen")
-st.write("** Wird je nach Modell extrem lange dauern **")
+    st.divider()
+    st.write("### Prognosen neu erstellen")
+    st.write("**Wird je nach Modell extrem lange dauern**")
 
-# Modelle auswählen (mehrere möglich)
-selected_models = st.multiselect("Wähle Departments aus", options=available_models, default=available_models[:3])
+    # Modelle auswählen (mehrere möglich)
+    selected_models = st.multiselect("Wähle Departments aus", options=available_models, default=available_models[:3])
 
-# Prognose-Button
-if not st.session_state["tool_predict"]:
-    st.button("Prognose starten", key="do_tool_prediction_trigger",
-              on_click=lambda: st.session_state.update({"tool_predict": True}))
+    # Prognose-Button
+    if not st.session_state["tool_predict"]:
+        st.button("Prognose starten", key="do_tool_prediction_trigger",
+                  on_click=lambda: st.session_state.update({"tool_predict": True}))
 
-# Führe alle Vorhersagen aus
-if st.session_state["tool_predict"]:
-    do_prediction(selected_models)
+    # Führe alle Vorhersagen aus
+    if st.session_state["tool_predict"]:
+        do_prediction(selected_models)
+
+
+page()

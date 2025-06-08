@@ -1,10 +1,17 @@
+import threading
+
 import streamlit as st
+
+from data_loader import initialize_heavy_modules
 
 st.set_page_config(
     page_title="Analyse‐Tool",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Lade als Erstes die Module (asynchron)
+threading.Thread(target=initialize_heavy_modules).start()
 
 # Hier werden die Seiten definiert
 main_page = st.Page("pages/welcome.py", title="Home")

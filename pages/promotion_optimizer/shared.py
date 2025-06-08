@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from data_loader import load_full_forecast_data
 from logic.optimization.optimizations import run_promotion_sales_optimization_all
 from logic.optimization.visualizations import prepare_solution_data, plot_sales_boost
 
@@ -47,6 +48,16 @@ def create_shared_parameters():
     promo_decay = st.sidebar.number_input("Wirkungsnachlass je Woche mit wiederholter Promotion in %", value=40.0,
                                           step=0.1,
                                           min_value=0.0, max_value=100.0)
+
+    # Solver-Einstellungen
+    st.sidebar.divider()
+    st.sidebar.header("Solver Einstellungen")
+    use_prediction = st.sidebar.checkbox("Verwende Vorhersage anstelle historischer Daten, falls verfügbar", value=True)
+    selected_model = None
+    if use_prediction:
+        st.sidebar.info(
+            "Es werden die gespeicherten Vorhersagen aus dem ausgewählten Modell verwendet. Sie können auf der Vorhersage-Seite generiert werden.")
+        selected_model = st.sidebar.selectbox("Vorhersagenmodell", ["Prophet", "ARIMA", "LSTM"])
     solver_timeout = st.sidebar.number_input("Solver-Timeout in Sekunden (kann Güte reduzieren)", value=150, step=1,
                                              min_value=0)
 
@@ -63,16 +74,20 @@ def create_shared_parameters():
     st.write(f"Jede wiederholte Promotion verliert {promo_decay}% ihrer Wirkung.")
     st.write(f"Jede Woche ohne Promotion lässt die Wirkung um {promo_scaling}% wieder ansteigen.")
 
-    return create_params_state(promo_cost, promo_boost, promo_scaling, promo_decay, solver_timeout)
+    return create_params_state(promo_cost, promo_boost, promo_scaling, promo_decay, solver_timeout, use_prediction,
+                               selected_model)
 
 
-def create_params_state(promo_cost=None, promo_boost=None, promo_scaling=None, promo_decay=None, solver_timeout=None):
+def create_params_state(promo_cost=None, promo_boost=None, promo_scaling=None, promo_decay=None, solver_timeout=None,
+                        use_prediction=None, selected_model=None):
     return {
         "promo_cost": promo_cost,
         "promo_boost": promo_boost,
         "promo_scaling": promo_scaling,
         "promo_decay": promo_decay,
         "solver_timeout": solver_timeout,
+        "use_prediction": use_prediction,
+        "selected_model": selected_model,
     }
 
 
@@ -84,6 +99,15 @@ def handle_optimization(df_sales, df_features, params, ui_status, parallel, sele
         if ui_status:
             ui_status.update(label="Gespeicherte Daten werden angezeigt...")
         return
+
+    # Filter Stores und Depts
+    df_sales = filter_sales(df_sales, selected_stores, selected_depts)
+
+    # Verwende Vorhersagedaten, falls vorhanden
+    if params["use_prediction"]:
+        df_pred = load_full_forecast_data(params["selected_model"])
+        df_pred = filter_sales(df_pred, selected_stores, selected_depts)
+        df_sales = merge_forecast_with_sales(df_sales, df_pred)
 
     df_solution, status = run_optimization(
         df_sales,
@@ -155,6 +179,7 @@ def create_results(df_solution=None, status=None, selected_stores=None, selected
                 param_rows.append({"Parameter": readable_name, "Wert": value})
 
             df_params = pd.DataFrame(param_rows)
+            df_params["Wert"] = df_params["Wert"].astype(str)
             st.write(f"Die Ausführung wurde durch die folgenden Parameter definiert: ")
             st.dataframe(df_params)
 
@@ -216,3 +241,37 @@ def format_selection(selection):
     if isinstance(selection, list):
         return ", ".join(map(str, selection))
     return str(selection)
+
+
+def merge_forecast_with_sales(df_sales, df_pred):
+    # Erstelle einen zusammengesetzten Schlüssel aus Date, StoreID und DeptID
+    sales_keys = set(zip(df_sales["Date"], df_sales["StoreID"], df_sales["DeptID"]))
+    pred_keys = list(zip(df_pred["ds"], df_pred["StoreID"], df_pred["DeptID"]))
+
+    # Nur zukünftige Vorhersagen behalten (nicht in df_sales enthalten)
+    future_preds = df_pred.loc[[key not in sales_keys for key in pred_keys]].copy()
+    future_preds.rename(columns={"ds": "Date", "yhat": "WeeklySales"}, inplace=True)
+
+    future_preds["IsHoliday"] = False
+
+    # DataFrames kombinieren
+    df_combined = pd.concat([df_sales, future_preds[df_sales.columns]], ignore_index=True)
+    df_combined.sort_values(["StoreID", "DeptID", "Date"], inplace=True)
+
+    return df_combined
+
+
+def filter_sales(df_sales, selected_stores=None, selected_depts=None):
+    # Filter für StoreID
+    if selected_stores is not None:
+        if not isinstance(selected_stores, (list, tuple, set)):
+            selected_stores = [selected_stores]
+        df_sales = df_sales[df_sales["StoreID"].isin(selected_stores)]
+
+    # Filter für DeptID
+    if selected_depts is not None:
+        if not isinstance(selected_depts, (list, tuple, set)):
+            selected_depts = [selected_depts]
+        df_sales = df_sales[df_sales["DeptID"].isin(selected_depts)]
+
+    return df_sales
