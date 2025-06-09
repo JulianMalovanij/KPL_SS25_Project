@@ -1,0 +1,182 @@
+classDiagram
+%% package .
+    class data_loader {
+        + load_data(db_path)
+        + load_product_data(db_path)
+        + load_forecast_data(model, store_id, dept_id, db_path)
+        + load_full_forecast_data(model, db_path)
+        + initialize_heavy_modules()
+    }
+    class data_writer {
+        + save_prophet_forecast(forecast, store_id, dept_id, db_path)
+        + save_arima_forecast(predictions, dates, store_id, dept_id, conf_int, db_path)
+        + save_lstm_forecast(predictions, dates, store_id, dept_id, db_path)
+        + write_forecast(df, table_name, db_path)
+    }
+    class import_product_db {
+        + drop()
+        + do_import()
+    }
+    class layout {
+        + render_footer()
+        + with_layout(title, show_footer)
+        + decorator(func)
+        + wrapper()
+    }
+    class main
+    class scanner {
+        + load_gitignore(root)
+        + find_py(root, spec)
+        + extract_methods(root, rel)
+        + extract_imports(root, rels)
+        + main()
+    }
+    class scanner_2 {
+        + load_gitignore(project_dir)
+        + find_py_files(project_dir, spec)
+        + extract_functions(project_dir, rel)
+        + build_import_maps(project_dir, rel)
+        + extract_deps(project_dir, rel, project_files, func_to_files)
+        + build_model(project_dir)
+        + write_dot(function_map, deps, clusters, output_path)
+        + main()
+    }
+    class scanner_3 {
+        + load_gitignore(root)
+        + find_py(root, spec)
+        + extract_methods(root, rel)
+        + extract_import_deps(root, files)
+        + extract_call_deps(root, files, methods_map)
+        + main()
+    }
+%% package experiments
+    class arima_forecast
+    class forecast_prophet
+    class import_db
+    class lstm_forecast
+    class plot_forecast
+%% package logic\forcasting
+    class forecast_dept_level {
+        + prophet_forecast(df)
+        + arima_forecast(df)
+        + lstm_forecast(df)
+        + run_forecast(history, model_option, store_id, dept_id)
+    }
+%% package logic\optimization
+    class helper {
+        + start_ui_status_updater(ui_status, status_queue, total)
+        + report_status(status_object, store_id, dept_id, label, state, expanded, details)
+        + update_status(ui_status, label, state, expanded, details, placeholder)
+        + get_default_cplex_path()
+        + create_solver(solver_timeout, cplex_path, multithreading, debug)
+        + updater()
+    }
+    class optimizations {
+        + run_single_store_dept_optimization(args)
+        + run_promotion_sales_optimization_all(df_sales, df_features, boost_max, decay_factor, recovery_rate, cost_rate, ui_status, parallel, solver_timeout)
+        + run_promotion_sales_optimization(df_sales, df_features, boost_max, decay_factor, recovery_rate, cost_rate, solver_timeout, store_id, dept_id, ui_status, parallel)
+        + remove_outliers(df)
+        + compute_boost_potential(base_sales, fallback_value, normalize)
+        + get_latest_previous_week(key, available_keys)
+        + create_data_row(store_id, dept_id, year, week, x, base_sales, dynamic_boost, boost_potential, promo_cost)
+        + safe_multiply()
+        + safe_add(a, b)
+    }
+    class visualizations {
+        + plot_promotion_optimization(df_solution)
+        + prepare_solution_data(df_solution)
+        + plot_sales_boost(df_dept, store_id, dept_id)
+    }
+%% package pages
+    class descriptive_analysis {
+        + page()
+    }
+    class forecast {
+        + page()
+    }
+    class util {
+        + do_prediction(models)
+        + page()
+    }
+    class welcome {
+        + page()
+    }
+%% package pages\promotion_optimizer
+    class promo_optimizer_departments {
+        + page()
+    }
+    class promo_optimizer_stores {
+        + page()
+    }
+    class shared {
+        + init_session()
+        + create_promo_state(df_solution, status, run_opts, selected_stores, selected_depts, params)
+        + create_shared_parameters()
+        + create_params_state(promo_cost, promo_boost, promo_scaling, promo_decay, solver_timeout, use_prediction, selected_model)
+        + handle_optimization(df_sales, df_features, params, ui_status, parallel, selected_stores, selected_depts)
+        + run_optimization(df_sales, df_features, params, ui_status, parallel)
+        + create_results(df_solution, status, selected_stores, selected_depts, params)
+        + format_selection(selection)
+        + merge_forecast_with_sales(df_sales, df_pred)
+        + filter_sales(df_sales, selected_stores, selected_depts)
+    }
+    forecast_dept_level --> data_loader: use
+    forecast_dept_level --> data_writer: use
+    optimizations --> import_product_db: use
+    optimizations --> helper: use
+    descriptive_analysis --> data_loader: use
+    descriptive_analysis --> import_product_db: use
+    descriptive_analysis --> layout: use
+    descriptive_analysis --> forecast: use
+    descriptive_analysis --> promo_optimizer_departments: use
+    descriptive_analysis --> promo_optimizer_stores: use
+    descriptive_analysis --> util: use
+    descriptive_analysis --> welcome: use
+    forecast --> data_loader: use
+    forecast --> layout: use
+    forecast --> forecast_dept_level: use
+    forecast --> descriptive_analysis: use
+    forecast --> promo_optimizer_departments: use
+    forecast --> promo_optimizer_stores: use
+    forecast --> util: use
+    forecast --> welcome: use
+    promo_optimizer_departments --> data_loader: use
+    promo_optimizer_departments --> layout: use
+    promo_optimizer_departments --> descriptive_analysis: use
+    promo_optimizer_departments --> forecast: use
+    promo_optimizer_departments --> promo_optimizer_stores: use
+    promo_optimizer_departments --> shared: use
+    promo_optimizer_departments --> util: use
+    promo_optimizer_departments --> welcome: use
+    promo_optimizer_stores --> data_loader: use
+    promo_optimizer_stores --> layout: use
+    promo_optimizer_stores --> descriptive_analysis: use
+    promo_optimizer_stores --> forecast: use
+    promo_optimizer_stores --> promo_optimizer_departments: use
+    promo_optimizer_stores --> shared: use
+    promo_optimizer_stores --> util: use
+    promo_optimizer_stores --> welcome: use
+    shared --> data_loader: use
+    shared --> optimizations: use
+    shared --> visualizations: use
+    util --> data_loader: use
+    util --> import_product_db: use
+    util --> layout: use
+    util --> forecast_dept_level: use
+    util --> descriptive_analysis: use
+    util --> forecast: use
+    util --> promo_optimizer_departments: use
+    util --> promo_optimizer_stores: use
+    util --> welcome: use
+    welcome --> layout: use
+    welcome --> descriptive_analysis: use
+    welcome --> forecast: use
+    welcome --> promo_optimizer_departments: use
+    welcome --> promo_optimizer_stores: use
+    welcome --> util: use
+    scanner --> scanner_2: use
+    scanner --> scanner_3: use
+    scanner_2 --> scanner: use
+    scanner_2 --> scanner_3: use
+    scanner_3 --> scanner: use
+    scanner_3 --> scanner_2: use

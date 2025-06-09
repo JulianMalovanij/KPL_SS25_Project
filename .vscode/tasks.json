@@ -15,6 +15,14 @@
       },
       "windows": {
         "command": "powershell",
+        "options": {
+          "shell": {
+            "executable": "powershell.exe",
+            "args": [
+              "/c"
+            ]
+          }
+        },
         "args": [
           "-NoProfile",
           "-ExecutionPolicy",
@@ -29,6 +37,9 @@
         "reveal": "always",
         "focus": false,
         "panel": "shared"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
       }
     },
     {
@@ -41,6 +52,14 @@
       ],
       "windows": {
         "command": ".\\.venv\\Scripts\\streamlit.exe",
+        "options": {
+          "shell": {
+            "executable": "powershell.exe",
+            "args": [
+              "/c"
+            ]
+          }
+        },
         "args": [
           "run",
           "main.py"
