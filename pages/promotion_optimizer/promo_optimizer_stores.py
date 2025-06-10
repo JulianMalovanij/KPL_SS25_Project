@@ -1,6 +1,6 @@
 import streamlit as st
 
-from data_loader import load_data
+from database.data_loader import load_data
 from layout import with_layout
 from pages.promotion_optimizer.shared import create_shared_parameters, create_results, handle_optimization, init_session
 

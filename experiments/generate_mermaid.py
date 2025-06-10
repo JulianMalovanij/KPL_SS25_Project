@@ -2,13 +2,12 @@
 """
 generate_mermaid.py
 
-Scannt dein funktionales Python-Projekt und schreibt ein Mermaid classDiagram:
+Scannt Dein funktionales Python-Projekt und schreibt ein Mermaid classDiagram:
  - jede .py als class mit multi-line Methoden-Labels
  - Ordner als package-Blöcke
- - Imports und Funktionsaufrufe als --> Pfeile mit Label "use"
+ - Nur tatsächliche Imports (import & from-import) als --> Pfeile mit Label "use"
 
 Usage:
-    pip install pathspec
     python generate_mermaid.py /pfad/zum/projekt --output diagram.mmd
 """
 import argparse
@@ -25,12 +24,12 @@ def load_gitignore(root: Path):
 
 
 def find_py(root: Path, spec):
-    res = []
+    files = []
     for p in root.rglob("*.py"):
         rel = p.relative_to(root)
         if not spec.match_file(str(rel)):
-            res.append(rel)
-    return sorted(res)
+            files.append(rel)
+    return sorted(files)
 
 
 def extract_methods(root: Path, rel):
@@ -48,69 +47,55 @@ def extract_methods(root: Path, rel):
 
 
 def extract_import_deps(root: Path, files):
+    """
+    Liefert nur echte Modul-Imports:
+      import x.y
+      from x.y import z
+      from .   import a
+      from ..b import c
+    als (source_rel, target_rel)-Paare, wenn target_rel in files ist.
+    """
     deps = set()
+    file_set = set(files)
     for rel in files:
+        path = root / rel
         try:
-            src = (root / rel).read_text(encoding="utf-8", errors="ignore")
+            src = path.read_text(encoding="utf-8", errors="ignore")
             tree = ast.parse(src)
         except:
             continue
+
         for node in ast.walk(tree):
+            # import x.y -> dependency auf x/y.py
             if isinstance(node, ast.Import):
-                for a in node.names:
-                    tgt = Path(a.name.replace(".", "/") + ".py")
-                    if tgt in files and tgt != rel:
-                        deps.add((rel, tgt))
+                for alias in node.names:
+                    mod = alias.name  # e.g. "pkg.module"
+                    candidate = Path(mod.replace(".", "/")).with_suffix(".py")
+                    if candidate in file_set:
+                        deps.add((rel, candidate))
+
+            # from X import Y  -> dependency auf X.py
+            # from X.Y import Z -> dependency auf X/Y.py
+            # relative: from .A import B -> dependency auf same/package/A.py
             elif isinstance(node, ast.ImportFrom):
-                base = node.module or ""
                 if node.level == 0:
-                    for a in node.names:
-                        full = (base + "." + a.name).strip(".")
-                        tgt = Path(full.replace(".", "/") + ".py")
-                        if tgt in files and tgt != rel:
-                            deps.add((rel, tgt))
+                    # absolute
+                    if node.module:
+                        base = node.module  # may include "."
+                        candidate = Path(base.replace(".", "/")).with_suffix(".py")
+                        if candidate in file_set:
+                            deps.add((rel, candidate))
                 else:
+                    # relative imports
                     parent = rel.parent
                     for _ in range(node.level - 1):
                         parent = parent.parent
                     if node.module:
                         parent = parent / Path(node.module.replace(".", "/"))
-                    for a in node.names:
-                        cand = parent / (a.name + ".py")
-                        if cand in files and cand != rel:
-                            deps.add((rel, cand))
-    return deps
+                    candidate = parent.with_suffix(".py")
+                    if candidate in file_set:
+                        deps.add((rel, candidate))
 
-
-def extract_call_deps(root: Path, files, methods_map):
-    # Build reverse map: func name -> set of files defining it
-    func_to_files = {}
-    for f, funcs in methods_map.items():
-        for sig in funcs:
-            name = sig.split("(")[0]
-            func_to_files.setdefault(name, set()).add(f)
-
-    deps = set()
-    for rel in files:
-        try:
-            src = (root / rel).read_text(encoding="utf-8", errors="ignore")
-            tree = ast.parse(src)
-        except:
-            continue
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                # direct name calls
-                if isinstance(node.func, ast.Name):
-                    nm = node.func.id
-                    for tgt in func_to_files.get(nm, ()):
-                        if tgt != rel:
-                            deps.add((rel, tgt))
-                # attribute calls foo.bar()
-                elif isinstance(node.func, ast.Attribute):
-                    nm = node.func.attr
-                    for tgt in func_to_files.get(nm, ()):
-                        if tgt != rel:
-                            deps.add((rel, tgt))
     return deps
 
 
@@ -123,15 +108,16 @@ def main():
     root = Path(args.project_dir)
     spec = load_gitignore(root)
     files = find_py(root, spec)
+
+    # Methoden pro Datei
     methods = {f: extract_methods(root, f) for f in files}
 
-    import_deps = extract_import_deps(root, files)
-    call_deps = extract_call_deps(root, files, methods)
-    deps = import_deps.union(call_deps)
+    # Nur Import-Abhängigkeiten
+    deps = extract_import_deps(root, files)
 
     # Mermaid-Output
-    lines = ["```mermaid", "classDiagram"]
-    # group by folder
+    lines = ["classDiagram"]
+    # Gruppiere nach Ordner
     pkgs = {}
     for f in files:
         pkg = str(f.parent) or "root"
@@ -149,11 +135,11 @@ def main():
                 lines.append("  }")
             else:
                 lines.append(f"  class {cname}")
-    # dependencies
+
+    # Nur echte Import-Kanten
     for src, tgt in sorted(deps):
         lines.append(f"  {src.stem} --> {tgt.stem} : use")
 
-    lines.append("```")
     Path(args.output).write_text("\n".join(lines), encoding="utf-8")
     print(f"[✔] Mermaid-Datei geschrieben: {args.output}")
 

@@ -1,11 +1,11 @@
 # arima_forecast_demand.py
 # ARIMA-Prognose der aggregierten Nachfrage pro Produkt & Lager aus HistoricalDemand
 
-import pandas as pd
-import sqlite3
 import os
+import sqlite3
+
+import pandas as pd
 from pmdarima import auto_arima
-from datetime import datetime
 
 
 def arima_forecast_demand(product_code: str, warehouse_code: str):
@@ -25,8 +25,8 @@ def arima_forecast_demand(product_code: str, warehouse_code: str):
     # Daten vorbereiten
     df = df.rename(columns={"Date": "ds", "OrderDemand": "y"})
     df['y'] = pd.to_numeric(df['y'].astype(str)
-                           .str.replace("(", "-", regex=False)
-                           .str.replace(")", "", regex=False), errors='coerce')
+                            .str.replace("(", "-", regex=False)
+                            .str.replace(")", "", regex=False), errors='coerce')
     df = df.dropna()
     df = df.groupby("ds").sum().reset_index()
 

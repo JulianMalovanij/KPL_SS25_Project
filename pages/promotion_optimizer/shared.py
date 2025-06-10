@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from data_loader import load_full_forecast_data
+from database.data_loader import load_full_sales_forecast_data
 from logic.optimization.optimizations import run_promotion_sales_optimization_all
 from logic.optimization.visualizations import prepare_solution_data, plot_sales_boost
 
@@ -12,7 +12,9 @@ PARAMETER_LABELS = {
     "promo_boost": "Maximaler Boost (%)",
     "promo_scaling": "Wirkungserholung (%)",
     "promo_decay": "Wirkungsnachlass (%)",
-    "solver_timeout": "Solver-Timeout (Sekunden)"
+    "solver_timeout": "Solver-Timeout (Sekunden)",
+    "use_prediction": "Verwende Vorhersagen, falls vorhanden",
+    "selected_model": "Ausgewähltes Vorhersagenmodell"
 }
 
 
@@ -57,7 +59,7 @@ def create_shared_parameters():
     if use_prediction:
         st.sidebar.info(
             "Es werden die gespeicherten Vorhersagen aus dem ausgewählten Modell verwendet. Sie können auf der Vorhersage-Seite generiert werden.")
-        selected_model = st.sidebar.selectbox("Vorhersagenmodell", ["Prophet", "ARIMA", "LSTM"])
+        selected_model = st.sidebar.selectbox("Vorhersagenmodell", ["Prophet", "ARIMA", "Holt-Winters"])
     solver_timeout = st.sidebar.number_input("Solver-Timeout in Sekunden (kann Güte reduzieren)", value=150, step=1,
                                              min_value=0)
 
@@ -105,7 +107,7 @@ def handle_optimization(df_sales, df_features, params, ui_status, parallel, sele
 
     # Verwende Vorhersagedaten, falls vorhanden
     if params["use_prediction"]:
-        df_pred = load_full_forecast_data(params["selected_model"])
+        df_pred = load_full_sales_forecast_data(params["selected_model"])
         df_pred = filter_sales(df_pred, selected_stores, selected_depts)
         df_sales = merge_forecast_with_sales(df_sales, df_pred)
 

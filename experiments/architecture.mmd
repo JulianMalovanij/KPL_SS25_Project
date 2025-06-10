@@ -24,37 +24,82 @@ classDiagram
         + wrapper()
     }
     class main
-    class scanner {
-        + load_gitignore(root)
-        + find_py(root, spec)
-        + extract_methods(root, rel)
-        + extract_imports(root, rels)
-        + main()
+%% package experiments\forecast
+    class app_demand_forecast {
+        + get_available_combinations()
     }
-    class scanner_2 {
-        + load_gitignore(project_dir)
-        + find_py_files(project_dir, spec)
-        + extract_functions(project_dir, rel)
-        + build_import_maps(project_dir, rel)
-        + extract_deps(project_dir, rel, project_files, func_to_files)
-        + build_model(project_dir)
-        + write_dot(function_map, deps, clusters, output_path)
-        + main()
+    class app_demand_forecast_erweitert {
+        + get_available_combinations()
     }
-    class scanner_3 {
+    class apptest {
+        + calculate_kpis(df)
+        + get_available_combinations()
+    }
+    class apptestv2 {
+        + calculate_kpis(df)
+        + get_available_combinations()
+        + holt_winters_forecast(df, periods)
+    }
+    class arima_forecast
+    class arima_forecast_demand {
+        + arima_forecast_demand(product_code, warehouse_code)
+    }
+    class forecast_demand {
+        + load_demand_data(product_code, warehouse_code)
+        + forecast_demand_prophet(product_code, warehouse_code)
+        + plot_forecast(df, forecast, product_code, warehouse_code)
+    }
+    class forecast_prophet
+    class lstm_forecast
+    class plot_forecast
+    class v1test {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + arima_forecast(df, periods)
+    }
+    class v2test {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+    }
+    class v3test {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+        + arima_forecast(df, periods)
+    }
+    class v3test_erweitert {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+        + arima_forecast(df, periods)
+    }
+    class v4test_final {
+        + calculate_kpis(df)
+        + get_available_combinations()
+        + holt_winters_forecast(df, periods)
+        + generate_forecasts(df, periods)
+    }
+    class v4test_neu {
+        + calculate_kpis(df)
+        + load_sales_data()
+        + holt_winters_forecast(df, periods)
+        + generate_forecasts(df, periods, model_choices)
+    }
+    class wetter {
+        + load_weather_sales_data()
+        + calculate_kpis(df)
+        + prophet_with_weather(df, periods, regressors)
+    }
+%% package experiments
+    class generate_mermaid {
         + load_gitignore(root)
         + find_py(root, spec)
         + extract_methods(root, rel)
         + extract_import_deps(root, files)
-        + extract_call_deps(root, files, methods_map)
         + main()
     }
-%% package experiments
-    class arima_forecast
-    class forecast_prophet
     class import_db
-    class lstm_forecast
-    class plot_forecast
 %% package logic\forcasting
     class forecast_dept_level {
         + prophet_forecast(df)
@@ -122,40 +167,19 @@ classDiagram
     }
     forecast_dept_level --> data_loader: use
     forecast_dept_level --> data_writer: use
-    optimizations --> import_product_db: use
     optimizations --> helper: use
+    main --> data_loader: use
     descriptive_analysis --> data_loader: use
-    descriptive_analysis --> import_product_db: use
     descriptive_analysis --> layout: use
-    descriptive_analysis --> forecast: use
-    descriptive_analysis --> promo_optimizer_departments: use
-    descriptive_analysis --> promo_optimizer_stores: use
-    descriptive_analysis --> util: use
-    descriptive_analysis --> welcome: use
     forecast --> data_loader: use
     forecast --> layout: use
     forecast --> forecast_dept_level: use
-    forecast --> descriptive_analysis: use
-    forecast --> promo_optimizer_departments: use
-    forecast --> promo_optimizer_stores: use
-    forecast --> util: use
-    forecast --> welcome: use
     promo_optimizer_departments --> data_loader: use
     promo_optimizer_departments --> layout: use
-    promo_optimizer_departments --> descriptive_analysis: use
-    promo_optimizer_departments --> forecast: use
-    promo_optimizer_departments --> promo_optimizer_stores: use
     promo_optimizer_departments --> shared: use
-    promo_optimizer_departments --> util: use
-    promo_optimizer_departments --> welcome: use
     promo_optimizer_stores --> data_loader: use
     promo_optimizer_stores --> layout: use
-    promo_optimizer_stores --> descriptive_analysis: use
-    promo_optimizer_stores --> forecast: use
-    promo_optimizer_stores --> promo_optimizer_departments: use
     promo_optimizer_stores --> shared: use
-    promo_optimizer_stores --> util: use
-    promo_optimizer_stores --> welcome: use
     shared --> data_loader: use
     shared --> optimizations: use
     shared --> visualizations: use
@@ -163,20 +187,4 @@ classDiagram
     util --> import_product_db: use
     util --> layout: use
     util --> forecast_dept_level: use
-    util --> descriptive_analysis: use
-    util --> forecast: use
-    util --> promo_optimizer_departments: use
-    util --> promo_optimizer_stores: use
-    util --> welcome: use
     welcome --> layout: use
-    welcome --> descriptive_analysis: use
-    welcome --> forecast: use
-    welcome --> promo_optimizer_departments: use
-    welcome --> promo_optimizer_stores: use
-    welcome --> util: use
-    scanner --> scanner_2: use
-    scanner --> scanner_3: use
-    scanner_2 --> scanner: use
-    scanner_2 --> scanner_3: use
-    scanner_3 --> scanner: use
-    scanner_3 --> scanner_2: use
