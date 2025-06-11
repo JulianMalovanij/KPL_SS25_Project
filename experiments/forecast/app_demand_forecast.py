@@ -1,25 +1,26 @@
 # app_demand_forecast.py
 # Streamlit-Dashboard für Prophet- und ARIMA-Prognose pro Produkt & Lager und gesamt je Produkt
 
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import sys
 import os
 import sqlite3
+import sys
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import streamlit as st
 
 # Pfad zum Ordner 'experiments' hinzufügen
 sys.path.append(os.path.join(os.getcwd(), "experiments"))
 
-from forecast_demand import forecast_demand_prophet
-from arima_forecast_demand import arima_forecast_demand
+from experiments.forecast.forecaster_products import forecast_demand_prophet
+from experiments.forecast.arima_forecast_demand import arima_forecast_demand
 
 # Titel
 st.title("📦 Nachfrageprognose Dashboard")
 st.markdown("Prognose der aggregierten Nachfrage je Produkt & Lager")
 
+
 # Verfügbare Kombinationen laden
-@st.cache_data
 def get_available_combinations():
     db_path = os.path.join(os.path.dirname(os.getcwd()), "walmart.db")
     conn = sqlite3.connect(db_path)
@@ -29,6 +30,7 @@ def get_available_combinations():
     df_products = pd.read_sql(prod_query, conn)
     conn.close()
     return df_combos, df_products['ProductCode'].tolist()
+
 
 available_combinations, available_products = get_available_combinations()
 
@@ -78,12 +80,15 @@ if selected_product:
         conn.close()
 
         df_total = df_total.rename(columns={"Date": "ds", "OrderDemand": "y"})
-        df_total['y'] = pd.to_numeric(df_total['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False), errors='coerce')
+        df_total['y'] = pd.to_numeric(
+            df_total['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False),
+            errors='coerce')
         df_total = df_total.dropna()
         df_total = df_total.groupby("ds").sum().reset_index()
 
         if model_choice == "Prophet":
             from prophet import Prophet
+
             model = Prophet()
             model.fit(df_total)
             future = model.make_future_dataframe(periods=104, freq='W')
@@ -91,6 +96,7 @@ if selected_product:
             forecast_total = forecast_total[['ds', 'yhat']]
         else:
             from pmdarima import auto_arima
+
             model = auto_arima(df_total['y'], seasonal=False, suppress_warnings=True)
             forecast_vals = model.predict(n_periods=104)
             future_dates = pd.date_range(start=df_total['ds'].max() + pd.Timedelta(weeks=1), periods=104, freq='W')

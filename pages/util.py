@@ -2,12 +2,12 @@ import traceback
 
 import streamlit as st
 
-import data_loader
-import import_product_db
+import database.data_loader as data_loader
+import database.import_product_db as import_product_db
 from layout import with_layout
-from logic.forcasting.forecast_dept_level import run_forecast
+from logic.forcasting.forecaster import run_sales_forecast
 
-available_models = ["Prophet", "ARIMA", "LSTM"]
+available_models = ["Prophet", "ARIMA", "Holt-Winters"]
 
 if "tool_import_db" not in st.session_state:
     st.session_state["tool_import_db"] = False
@@ -24,7 +24,7 @@ def do_prediction(models):
     static_str = "\n Dies wird extrem lange dauern... Bitte warten!"
     for i, model_option in enumerate(models):
         model_str = f"(Model {i + 1}/{len(models)}: {model_option})"
-        with st.status(f"Führe **alle** Vorhersagen aus {model_str}: Startup... {static_str}",
+        with st.status(f"Führe **alle** Vorhersagen für Sales aus {model_str}: Startup... {static_str}",
                        state="running") as ui_status:
             try:
                 for _, row in combinations.iterrows():
@@ -37,17 +37,20 @@ def do_prediction(models):
                     history = df_sales[
                         (df_sales["StoreID"] == store_id) &
                         (df_sales["DeptID"] == dept_id)
-                        ][["Date", "WeeklySales"]].copy()
+                        ][["Date", "WeeklySales"]].sort_values("Date").rename(
+                        columns={"Date": "ds", "WeeklySales": "y"}).copy()
 
                     # Überspringe leere oder zu kurze Zeitreihen
                     if len(history) < 10:
                         continue
 
-                    ui_status.update(label=f"Führe **alle** Vorhersagen aus {model_str}: {pred_str}... {static_str}")
+                    ui_status.update(
+                        label=f"Führe **alle** Vorhersagen für Sales aus {model_str}: {pred_str}... {static_str}")
 
-                    run_forecast(history, model_option, store_id, dept_id)
+                    run_sales_forecast(history, model_option, store_id, dept_id, 104)
 
-                ui_status.update(label=f"Alle Vorhersagen {model_str} abgeschlossen und gespeichert.", state="complete")
+                ui_status.update(label=f"Alle Vorhersagen für Sales {model_str} abgeschlossen und gespeichert.",
+                                 state="complete")
 
             except Exception as e:
                 traceback.print_exc()
@@ -90,11 +93,11 @@ def page():
               on_click=lambda: st.cache_data.clear())
 
     st.divider()
-    st.write("### Prognosen neu erstellen")
+    st.write("### Sales-Prognosen neu erstellen")
     st.write("**Wird je nach Modell extrem lange dauern**")
 
     # Modelle auswählen (mehrere möglich)
-    selected_models = st.multiselect("Wähle Departments aus", options=available_models, default=available_models[:3])
+    selected_models = st.multiselect("Wähle Modelle aus", options=available_models, default=available_models[:3])
 
     # Prognose-Button
     if not st.session_state["tool_predict"]:

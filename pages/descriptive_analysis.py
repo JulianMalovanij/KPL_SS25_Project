@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 
-from data_loader import load_data
+from database.data_loader import load_data
 from layout import with_layout
 
 

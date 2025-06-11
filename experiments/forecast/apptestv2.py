@@ -1,12 +1,13 @@
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import sys
 import os
 import sqlite3
-from datetime import datetime, timedelta
-import numpy as np
+import sys
+from datetime import timedelta
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import streamlit as st
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
 
 # Zusatzfunktionen für KPIs
 @st.cache_data
@@ -17,15 +18,15 @@ def calculate_kpis(df):
     growth = ((df['y'].iloc[-1] - df['y'].iloc[0]) / df['y'].iloc[0]) * 100 if df['y'].iloc[0] != 0 else 0
     return total, weekly_avg, volatility, growth
 
+
 # Pfad zum Ordner 'experiments' hinzufügen
 sys.path.append(os.path.join(os.getcwd(), "experiments"))
-from forecast_demand import forecast_demand_prophet
-from arima_forecast_demand import arima_forecast_demand
 
 # Titel
 st.set_page_config(layout="wide")
 st.title("📦 Nachfrageanalyse- & Prognose-Tool")
 st.markdown("Erkunden Sie Nachfrageprognosen nach Produkt, Lager und Kategorie mit KPIs und Modellvergleich")
+
 
 # Verfügbare Kombinationen laden
 @st.cache_data
@@ -33,9 +34,10 @@ def get_available_combinations():
     db_path = os.path.join(os.path.dirname(os.getcwd()), "walmart.db")
     conn = sqlite3.connect(db_path)
     combo_query = """
-        SELECT DISTINCT ProductCode, WarehouseCode, ProductCategory 
-        FROM HistoricalDemand ORDER BY ProductCode, WarehouseCode
-    """
+                  SELECT DISTINCT ProductCode, WarehouseCode, ProductCategory
+                  FROM HistoricalDemand
+                  ORDER BY ProductCode, WarehouseCode \
+                  """
     prod_query = "SELECT DISTINCT ProductCode FROM HistoricalDemand ORDER BY ProductCode"
     cat_query = "SELECT DISTINCT ProductCategory FROM HistoricalDemand ORDER BY ProductCategory"
     cat_lager_query = "SELECT DISTINCT ProductCategory, WarehouseCode FROM HistoricalDemand ORDER BY ProductCategory, WarehouseCode"
@@ -46,6 +48,7 @@ def get_available_combinations():
     conn.close()
     return df_combos, df_products['ProductCode'].tolist(), df_categories['ProductCategory'].tolist(), df_cat_lager
 
+
 available_combinations, available_products, available_categories, available_cat_lager = get_available_combinations()
 
 # Auswahl des Modells
@@ -53,6 +56,7 @@ model_choice = st.radio("🔍 Modell wählen", ["Prophet", "ARIMA", "Holt-Winter
 
 # Container für 4 Prognosearten
 cols = st.columns(2)
+
 
 # Helper-Funktion Holt-Winters Forecast
 
@@ -69,10 +73,12 @@ def holt_winters_forecast(df, periods):
     future_dates = [df.index.max() + timedelta(weeks=i) for i in range(1, periods + 1)]
     return pd.DataFrame({"ds": future_dates, "yhat": forecast.values})
 
+
 # 1. Prognose nach Produkt & Lager
 with cols[0]:
     st.subheader("🔢 Prognose: Produkt & Lager")
-    selected_combo = st.selectbox("Produkt & Lager auswählen", available_combinations.apply(lambda row: f"{row['ProductCategory']} | {row['ProductCode']} | {row['WarehouseCode']}", axis=1))
+    selected_combo = st.selectbox("Produkt & Lager auswählen", available_combinations.apply(
+        lambda row: f"{row['ProductCategory']} | {row['ProductCode']} | {row['WarehouseCode']}", axis=1))
 
     if selected_combo and selected_combo.count("|") == 2:
         selected_category, product_code, warehouse_code = [x.strip() for x in selected_combo.split("|")]
@@ -92,7 +98,9 @@ with cols[0]:
                 df = pd.read_sql(query, conn, parse_dates=['Date'])
                 conn.close()
                 df = df.rename(columns={"Date": "ds", "OrderDemand": "y"})
-                df['y'] = pd.to_numeric(df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False), errors='coerce')
+                df['y'] = pd.to_numeric(
+                    df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False),
+                    errors='coerce')
                 df = df.dropna().groupby("ds").sum().reset_index()
                 forecast = holt_winters_forecast(df, 104)
 
@@ -113,7 +121,8 @@ with cols[0]:
 # 2. Prognose Kategorie & Lager
 with cols[1]:
     st.subheader("🏷️ Prognose: Kategorie & Lager")
-    selected_cat_lager = st.selectbox("Kategorie & Lager auswählen", available_cat_lager.apply(lambda row: f"{row['ProductCategory']} | {row['WarehouseCode']}", axis=1))
+    selected_cat_lager = st.selectbox("Kategorie & Lager auswählen", available_cat_lager.apply(
+        lambda row: f"{row['ProductCategory']} | {row['WarehouseCode']}", axis=1))
 
     if selected_cat_lager:
         selected_category, warehouse_code = [x.strip() for x in selected_cat_lager.split("|")]
@@ -129,17 +138,21 @@ with cols[1]:
             conn.close()
 
             df = df.rename(columns={"Date": "ds", "OrderDemand": "y"})
-            df['y'] = pd.to_numeric(df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False), errors='coerce')
+            df['y'] = pd.to_numeric(
+                df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False),
+                errors='coerce')
             df = df.dropna().groupby("ds").sum().reset_index()
 
             if model_choice == "Prophet":
                 from prophet import Prophet
+
                 model = Prophet()
                 model.fit(df)
                 future = model.make_future_dataframe(periods=104, freq='W')
                 forecast = model.predict(future)[['ds', 'yhat']]
             elif model_choice == "ARIMA":
                 from pmdarima import auto_arima
+
                 model = auto_arima(df['y'], seasonal=True, m=52)
                 pred = model.predict(n_periods=104)
                 future = pd.date_range(df['ds'].max() + pd.Timedelta(weeks=1), periods=104, freq='W')
@@ -175,17 +188,20 @@ try:
     conn.close()
 
     df = df.rename(columns={"Date": "ds", "OrderDemand": "y"})
-    df['y'] = pd.to_numeric(df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False), errors='coerce')
+    df['y'] = pd.to_numeric(df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False),
+                            errors='coerce')
     df = df.dropna().groupby("ds").sum().reset_index()
 
     if model_choice == "Prophet":
         from prophet import Prophet
+
         model = Prophet()
         model.fit(df)
         future = model.make_future_dataframe(periods=104, freq='W')
         forecast = model.predict(future)[['ds', 'yhat']]
     elif model_choice == "ARIMA":
         from pmdarima import auto_arima
+
         model = auto_arima(df['y'], seasonal=True, m=52)
         pred = model.predict(n_periods=104)
         future = pd.date_range(df['ds'].max() + pd.Timedelta(weeks=1), periods=104, freq='W')
@@ -221,17 +237,20 @@ try:
     conn.close()
 
     df = df.rename(columns={"Date": "ds", "OrderDemand": "y"})
-    df['y'] = pd.to_numeric(df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False), errors='coerce')
+    df['y'] = pd.to_numeric(df['y'].astype(str).str.replace("(", "-", regex=False).str.replace(")", "", regex=False),
+                            errors='coerce')
     df = df.dropna().groupby("ds").sum().reset_index()
 
     if model_choice == "Prophet":
         from prophet import Prophet
+
         model = Prophet()
         model.fit(df)
         future = model.make_future_dataframe(periods=104, freq='W')
         forecast = model.predict(future)[['ds', 'yhat']]
     elif model_choice == "ARIMA":
         from pmdarima import auto_arima
+
         model = auto_arima(df['y'], seasonal=True, m=52)
         pred = model.predict(n_periods=104)
         future = pd.date_range(df['ds'].max() + pd.Timedelta(weeks=1), periods=104, freq='W')

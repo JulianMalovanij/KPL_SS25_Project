@@ -1,15 +1,18 @@
-import streamlit as st
+import os
+import sqlite3
+from datetime import timedelta
+
 import pandas as pd
 import plotly.graph_objects as go
-import sqlite3
-import os
-from datetime import timedelta
+import streamlit as st
 from prophet import Prophet
 
 # Titel
 st.set_page_config(layout="wide")
 st.title("🌡️ Wetterbasierte Verkaufsprognose")
-st.markdown("Dieses Dashboard nutzt Temperatur, Feiertage und weitere Store-Features zur verbesserten Prognose der Weekly Sales.")
+st.markdown(
+    "Dieses Dashboard nutzt Temperatur, Feiertage und weitere Store-Features zur verbesserten Prognose der Weekly Sales.")
+
 
 # Daten laden
 @st.cache_data
@@ -17,7 +20,8 @@ def load_weather_sales_data():
     db_path = os.path.join(os.path.dirname(os.getcwd()), "walmart.db")
     conn = sqlite3.connect(db_path)
     sales = pd.read_sql("SELECT Date, WeeklySales, StoreID FROM WeeklySales", conn)
-    features = pd.read_sql("SELECT Date, StoreID, Temperature, FuelPrice, CPI, Unemployment, IsHoliday FROM StoreFeature", conn)
+    features = pd.read_sql(
+        "SELECT Date, StoreID, Temperature, FuelPrice, CPI, Unemployment, IsHoliday FROM StoreFeature", conn)
     conn.close()
 
     sales['Date'] = pd.to_datetime(sales['Date'])
@@ -29,6 +33,7 @@ def load_weather_sales_data():
     df = df.dropna()
     return df
 
+
 # KPIs
 @st.cache_data
 def calculate_kpis(df):
@@ -37,6 +42,7 @@ def calculate_kpis(df):
     volatility = df['y'].std()
     growth = ((df['y'].iloc[-1] - df['y'].iloc[0]) / df['y'].iloc[0]) * 100 if df['y'].iloc[0] != 0 else 0
     return total, weekly_avg, volatility, growth
+
 
 # Forecast mit Prophet
 def prophet_with_weather(df, periods, regressors):
@@ -61,6 +67,7 @@ def prophet_with_weather(df, periods, regressors):
     forecast_future = forecast[forecast["ds"] > df["ds"].max()]
     return df, forecast_future[["ds", "yhat"]]
 
+
 # Auswahl
 df_raw = load_weather_sales_data()
 store_ids = sorted(df_raw['StoreID'].unique())
@@ -68,7 +75,8 @@ selected_store = st.selectbox("🏬 Store auswählen", store_ids)
 forecast_period = st.slider("⏱️ Prognosezeitraum (Wochen)", 1, 52, 12)
 
 regressor_options = ["Temperature", "FuelPrice", "CPI", "Unemployment", "IsHoliday"]
-selected_regressors = st.multiselect("🧮 Externe Einflussfaktoren", regressor_options, default=["Temperature", "FuelPrice", "IsHoliday"])
+selected_regressors = st.multiselect("🧮 Externe Einflussfaktoren", regressor_options,
+                                     default=["Temperature", "FuelPrice", "IsHoliday"])
 
 # Daten vorbereiten
 store_df = df_raw[df_raw['StoreID'] == selected_store].copy()
@@ -91,8 +99,10 @@ if st.checkbox("📊 Korrelation anzeigen"):
 # Klarer Plot mit Forecast
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=store_df['Date'], y=store_df['WeeklySales'], mode='lines', name='Historische Verkäufe'))
-fig.add_trace(go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat'], mode='lines', name='Forecast', line=dict(dash='dash')))
-fig.update_layout(title=f"📉 Wetterbasierte Prognose für Store {selected_store}", xaxis_title="Datum", yaxis_title="Weekly Sales", legend_title="Daten")
+fig.add_trace(
+    go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat'], mode='lines', name='Forecast', line=dict(dash='dash')))
+fig.update_layout(title=f"📉 Wetterbasierte Prognose für Store {selected_store}", xaxis_title="Datum",
+                  yaxis_title="Weekly Sales", legend_title="Daten")
 st.plotly_chart(fig, use_container_width=True)
 
 # CSV-Export

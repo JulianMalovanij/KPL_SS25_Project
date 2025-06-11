@@ -1,11 +1,12 @@
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import plotly.express as px
-import sqlite3
 import os
+import sqlite3
 from datetime import timedelta
+
+import pandas as pd
+import plotly.express as px
+import streamlit as st
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
 
 # Zusatzfunktionen für KPIs
 @st.cache_data
@@ -16,10 +17,12 @@ def calculate_kpis(df):
     growth = ((df['y'].iloc[-1] - df['y'].iloc[0]) / df['y'].iloc[0]) * 100 if df['y'].iloc[0] != 0 else 0
     return total, weekly_avg, volatility, growth
 
+
 # Titel
 st.set_page_config(layout="wide")
 st.title("📈 Verkaufsprognose-Tool (Weekly Sales)")
 st.markdown("Analysiere historische Verkaufsdaten aus WeeklySales mit interaktiven Prognosen und KPIs")
+
 
 # Daten laden
 @st.cache_data
@@ -34,6 +37,7 @@ def load_sales_data():
     df = df.dropna()
     return df
 
+
 # Forecast-Funktion Holt-Winters
 def holt_winters_forecast(df, periods):
     df = df.set_index("ds")
@@ -47,6 +51,7 @@ def holt_winters_forecast(df, periods):
     forecast = model.forecast(periods)
     future_dates = [df.index.max() + timedelta(weeks=i) for i in range(1, periods + 1)]
     return pd.DataFrame({"ds": future_dates, "yhat": forecast.values})
+
 
 # Forecast-Wrapper
 @st.cache_data
@@ -70,6 +75,7 @@ def generate_forecasts(df, periods, model_choices):
         forecasts['Holt-Winters'] = holt_winters_forecast(df, periods)
     return forecasts
 
+
 # Daten vorbereiten
 df_raw = load_sales_data()
 store_ids = sorted(df_raw['StoreID'].unique())
@@ -92,7 +98,8 @@ st.metric("📈 Wachstum", f"{growth:.1f}%")
 forecasts = generate_forecasts(store_df, forecast_period, model_choices)
 
 # Interaktives Diagramm anzeigen
-base = px.line(store_df, x="ds", y="y", title=f"🔍 Verkaufsprognose für Store {selected_store}", labels={"ds": "Datum", "y": "Verkäufe"})
+base = px.line(store_df, x="ds", y="y", title=f"🔍 Verkaufsprognose für Store {selected_store}",
+               labels={"ds": "Datum", "y": "Verkäufe"})
 for method, forecast_df in forecasts.items():
     base.add_scatter(x=forecast_df['ds'], y=forecast_df['yhat'], mode='lines', name=f"{method}-Forecast")
 st.plotly_chart(base, use_container_width=True)
@@ -100,4 +107,5 @@ st.plotly_chart(base, use_container_width=True)
 # Exportoptionen
 if st.checkbox("📥 Forecast-Daten als CSV exportieren"):
     for method, forecast_df in forecasts.items():
-        st.download_button(f"⬇️ Download {method}-Forecast", forecast_df.to_csv(index=False), f"{method}_forecast.csv", "text/csv")
+        st.download_button(f"⬇️ Download {method}-Forecast", forecast_df.to_csv(index=False), f"{method}_forecast.csv",
+                           "text/csv")
