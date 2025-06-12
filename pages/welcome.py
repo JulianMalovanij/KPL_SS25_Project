@@ -35,7 +35,7 @@ def page():
 
     st.divider()
 
-    st.write("Alle Funktionen können über die übersichtlichen Navigation am linken Seitenrand erreicht werden.")
+    st.write("Alle Funktionen können über die übersichtliche Navigation am linken Seitenrand erreicht werden.")
 
 
 page()
