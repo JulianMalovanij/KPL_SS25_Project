@@ -28,6 +28,12 @@ Basis historischer Verkaufsdaten.
 
 ## 🚀 Installation
 
+**Voraussetzungen:**
+
+   * Python 3.12
+
+**Anleitung:**
+
 1. Klone das Repository:
 
    ```bash
@@ -83,7 +89,7 @@ Die **Willkommensseite** wird beim Start angezeigt und gibt einen Überblick üb
 
 ## 📦 Abhängigkeiten
 
-Die App nutzt folgende Pakete (Versionen mittels `~=` fixiert):
+Die App nutzt folgende Pakete:
 
 ```text
 pandas~=2.3.0
