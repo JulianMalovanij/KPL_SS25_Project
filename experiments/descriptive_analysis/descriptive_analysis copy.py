@@ -3,8 +3,8 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
-
 from data_loader import load_data
+
 from layout import with_layout
 
 
@@ -366,8 +366,88 @@ def page():
     st.write(
         "Die deskriptive Analyse ist abgeschlossen. Du kannst die verschiedenen Kennzahlen und Grafiken weiter anpassen oder interaktive Filter hinzufügen.")
 
-page()
 
-# %%
+# ---------------------------------------- neue Analysen 09.06.2025
+# -- App Configuration
+st.set_page_config(page_title="Deskriptive Datenanalyse", layout="wide")
+
+
+@st.cache_data
+def load_data(table_name: str) -> pd.DataFrame:
+    conn = sqlite3.connect("walmart.db")
+    df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn, parse_dates=['Date'])
+    conn.close()
+    return df
+
+
+# -- Sidebar: Tabelle auswählen
+st.sidebar.header("Einstellungen")
+tables = ['HistoricalDemand', 'Product', 'ProductCategory', 'Store', 'StoreFeature', 'WeeklySales']
+selected_table = st.sidebar.selectbox("Tabelle auswählen", tables)
+
+df = load_data(selected_table)
+
+# -- Übersicht
+st.title("Deskriptive Analyse: " + selected_table)
+st.write(df.head(10))
+st.write(f"Zeilen: {df.shape[0]}, Spalten: {df.shape[1]}")
+
+# -- Datentypen & fehlende Werte
+with st.expander("Datentypen & Fehlende Werte"):
+    types = pd.DataFrame(df.dtypes, columns=['dtype']).reset_index().rename(columns={'index': 'Spalte'})
+    missing = df.isna().sum().reset_index().rename(columns={'index': 'Spalte', 0: 'Fehlende'})
+    st.dataframe(types.merge(missing, on='Spalte'))
+
+# -- Deskriptive Statistik (numerisch)
+numeric_cols = [col for col in df.columns if pd.api.types.is_numeric_dtype(df[col])]
+if numeric_cols:
+    with st.expander("Deskriptive Statistik (numerisch)"):
+        st.dataframe(df[numeric_cols].describe())
+
+# -- Spezielle Analysen
+if selected_table == 'WeeklySales':
+    # Filter
+    stores = df['StoreID'].unique()
+    depts = df['DeptID'].unique()
+    sel_stores = st.sidebar.multiselect("StoreID(n)", stores, default=stores[:3])
+    sel_depts = st.sidebar.multiselect("DeptID(s)", depts, default=depts[:3])
+    date_range = st.sidebar.date_input("Datumsspanne", [df['Date'].min(), df['Date'].max()])
+
+    mask = (
+            df['StoreID'].isin(sel_stores) &
+            df['DeptID'].isin(sel_depts) &
+            df['Date'].between(date_range[0], date_range[1])
+    )
+    df_filt = df[mask]
+    st.subheader("Gefilterte Daten")
+    st.dataframe(df_filt)
+
+    # Zeitreihen-Plot
+    st.subheader("WeeklySales Zeitreihe")
+    fig, ax = plt.subplots()
+    for s in sel_stores:
+        for d in sel_depts:
+            sub = df_filt[(df_filt['StoreID'] == s) & (df_filt['DeptID'] == d)]
+            if not sub.empty:
+                ax.plot(sub['Date'], sub['WeeklySales'], label=f"S{s}-D{d}")
+    ax.set_xlabel('Datum')
+    ax.set_ylabel('WeeklySales')
+    ax.legend()
+    st.pyplot(fig)
+
+if selected_table == 'HistoricalDemand':
+    cats = df['ProductCategory'].unique()
+    sel_cat = st.sidebar.selectbox("Kategorie", cats)
+    df_cat = df[df['ProductCategory'] == sel_cat]
+    st.subheader(f"OrderDemand für {sel_cat}")
+    st.line_chart(df_cat.set_index('Date')['OrderDemand'])
+
+if selected_table == 'StoreFeature':
+    num = ['Temperature', 'FuelPrice', 'CPI', 'Unemployment']
+    with st.expander("Korrelation numerischer Merkmale"):
+        corr = df[num].corr()
+        st.dataframe(corr)
+
+page()
 
 # %%

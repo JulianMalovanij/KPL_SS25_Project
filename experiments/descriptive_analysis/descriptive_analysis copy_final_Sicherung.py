@@ -1,15 +1,16 @@
 # %% pages/descriptive_analysis.py
 
-import streamlit as st
-import pandas as pd
-import numpy as np
 import sqlite3
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib.dates as mdates
 
-from data_loader import load_data  # liefert df_sales, df_features, df_stores
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+import streamlit as st
+
+from database.data_loader import load_data  # liefert df_sales, df_features, df_stores
 from layout import with_layout
+
 
 # Hinweis: st.set_page_config sollte in main.py stehen
 
@@ -31,14 +32,13 @@ def page():
     section = st.sidebar.radio(
         "Analyse-Bereich:",
         ["Datenübersicht", "WeeklySales", "HistoricalDemand",
-        "Datensatz-Vergleich", "Events"]          #  ⬅︎ neu
+         "Datensatz-Vergleich", "Events"]  # ⬅︎ neu
     )
-
 
     df_demand["OrderDemand"] = pd.to_numeric(
         df_demand["OrderDemand"], errors="coerce"
     ).fillna(0)
-        # ----------------------------------------
+    # ----------------------------------------
     # 3) Datenübersicht
     # ----------------------------------------
     # ----------------------------------------
@@ -106,7 +106,7 @@ def page():
         stores = sorted(df_sales['StoreID'].unique())
         depts = sorted(df_sales['DeptID'].unique())
         sel_stores = st.sidebar.multiselect('StoreID auswählen', stores, default=stores[:3])
-        sel_depts  = st.sidebar.multiselect('DeptID auswählen', depts, default=depts[:2])
+        sel_depts = st.sidebar.multiselect('DeptID auswählen', depts, default=depts[:2])
         dr = st.sidebar.date_input(
             'Datumsspanne WeeklySales',
             [df_sales['Date'].min(), df_sales['Date'].max()]
@@ -116,22 +116,22 @@ def page():
             df_sales['StoreID'].isin(sel_stores) &
             df_sales['DeptID'].isin(sel_depts) &
             df_sales['Date'].between(start, end)
-        ]
+            ]
 
         # Univariate: WeeklySales-Verteilung
         st.subheader("Univariate: Verteilung der WeeklySales")
-        fig1, ax1 = plt.subplots(figsize=(6,4))
+        fig1, ax1 = plt.subplots(figsize=(6, 4))
         sns.histplot(df_ws['WeeklySales'], bins=30, kde=True, ax=ax1)
         ax1.set_title('Histogramm WeeklySales')
         st.pyplot(fig1)
 
         # Bivariate: Zeitreihe pro Store/Dept
         st.subheader("Bivariate: Zeitreihe nach Store/Dept")
-        fig2, ax2 = plt.subplots(figsize=(10,4))
+        fig2, ax2 = plt.subplots(figsize=(10, 4))
         cmap = plt.cm.get_cmap('tab10')
-        combos = [(s,d) for s in sel_stores for d in sel_depts]
-        for idx,(s,d) in enumerate(combos):
-            sub = df_ws[(df_ws['StoreID']==s)&(df_ws['DeptID']==d)]
+        combos = [(s, d) for s in sel_stores for d in sel_depts]
+        for idx, (s, d) in enumerate(combos):
+            sub = df_ws[(df_ws['StoreID'] == s) & (df_ws['DeptID'] == d)]
             if sub.empty: continue
             ax2.plot(sub['Date'], sub['WeeklySales'],
                      marker='o', linestyle='-', label=f"S{s}-D{d}",
@@ -141,7 +141,7 @@ def page():
         ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
         ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m.%y'))
         plt.setp(ax2.get_xticklabels(), rotation=45, ha='right')
-        ax2.legend(loc='upper left', bbox_to_anchor=(1,1))
+        ax2.legend(loc='upper left', bbox_to_anchor=(1, 1))
         ax2.grid(True)
         st.pyplot(fig2)
 
@@ -169,17 +169,17 @@ def page():
         df_ws["Month"] = df_ws["Date"].dt.month_name(locale="de_DE").str[:3]
 
         # Mittelwert pro Monat berechnen und chronologisch sortieren
-        month_order = ["Jan","Feb","Mär","Apr","Mai","Jun",
-                    "Jul","Aug","Sep","Okt","Nov","Dez"]
+        month_order = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+                       "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
 
         month_mean = (
             df_ws.groupby("Month")["WeeklySales"]
-                .mean()
-                .reindex(month_order)          # fixe Reihenfolge
-                .reset_index()
+            .mean()
+            .reindex(month_order)  # fixe Reihenfolge
+            .reset_index()
         )
 
-        fig_m, ax_m = plt.subplots(figsize=(7,3))
+        fig_m, ax_m = plt.subplots(figsize=(7, 3))
         sns.barplot(
             data=month_mean,
             x="Month",
@@ -207,7 +207,7 @@ def page():
             .unstack(fill_value=0)
         )
         monat_order = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
-                    "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+                       "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
         pivot_ws = pivot_ws.reindex(columns=monat_order)
 
         fig5, ax5 = plt.subplots(figsize=(9, 4))
@@ -246,7 +246,7 @@ def page():
         ax6.set_title("Zusammenhang: Temperatur vs. WeeklySales")
         st.pyplot(fig6)
         plt.close(fig6)
-        
+
         # ------------------------------------------------------------------
         # 2.3 Korrelationsmatrix (WeeklySales + numerische Features)
         # ------------------------------------------------------------------
@@ -256,7 +256,7 @@ def page():
         # ❶  Merge: WeeklySales-Ausschnitt + Features-Tabelle
         df_corr = (
             df_ws.merge(
-                df_features,              # enthält Temperature, FuelPrice, CPI, …
+                df_features,  # enthält Temperature, FuelPrice, CPI, …
                 on=["StoreID", "Date"],
                 how="left"
             )
@@ -295,7 +295,7 @@ def page():
             corr_mat["WeeklySales"]
             .abs()
             .sort_values(ascending=False)
-            .iloc[1:6]             # erstes Element ist 1.0 (Self-Corr)
+            .iloc[1:6]  # erstes Element ist 1.0 (Self-Corr)
             .index
             .tolist()
         )
@@ -320,33 +320,32 @@ def page():
         df_ws_feat = (
             df_ws
             .merge(
-                df_features[["StoreID","Date","CPI","Unemployment","IsHoliday"]],
-                on=["StoreID","Date"], how="left"
+                df_features[["StoreID", "Date", "CPI", "Unemployment", "IsHoliday"]],
+                on=["StoreID", "Date"], how="left"
             )
             .merge(
-                df_stores[["StoreID","StoreSize"]],
+                df_stores[["StoreID", "StoreSize"]],
                 on="StoreID", how="left"
             )
         )
 
         # ← Neu: gemeinsame Holiday-Flag erzeugen (bool)
         df_ws_feat["HolidayFlag"] = (
-            df_ws_feat.get("IsHoliday_x", False) |
-            df_ws_feat.get("IsHoliday_y", False)
+                df_ws_feat.get("IsHoliday_x", False) |
+                df_ws_feat.get("IsHoliday_y", False)
         )
-
 
         # ■ ❷ Barplot: Ø WeeklySales an Feiertagen vs. normalen Wochen
-        fig_hol, ax_hol = plt.subplots(figsize=(6,3))
+        fig_hol, ax_hol = plt.subplots(figsize=(6, 3))
         sns.barplot(
             data=df_ws_feat,
-            x="HolidayFlag",          # statt IsHoliday
+            x="HolidayFlag",  # statt IsHoliday
             y="WeeklySales",
             ci=None,
-            palette=["skyblue","salmon"],
+            palette=["skyblue", "salmon"],
             ax=ax_hol
         )
-        ax_hol.set_xticklabels(["Normal","Feiertag"])
+        ax_hol.set_xticklabels(["Normal", "Feiertag"])
         ax_hol.set_xlabel("")
         ax_hol.set_ylabel("Ø WeeklySales")
         ax_hol.set_title("Durchschnittlicher Umsatz: Feiertag vs. Normal")
@@ -354,9 +353,9 @@ def page():
         plt.close(fig_hol)
 
         # ■ ❸ Scatter: WeeklySales vs. CPI
-        fig_cpi, ax_cpi = plt.subplots(figsize=(6,4))
+        fig_cpi, ax_cpi = plt.subplots(figsize=(6, 4))
         sns.scatterplot(
-            data=df_ws_feat.sample(n=min(1000,len(df_ws_feat)), random_state=1),
+            data=df_ws_feat.sample(n=min(1000, len(df_ws_feat)), random_state=1),
             x="CPI",
             y="WeeklySales",
             alpha=0.4,
@@ -369,9 +368,9 @@ def page():
         plt.close(fig_cpi)
 
         # ■ ❹ Scatter: WeeklySales vs. Unemployment
-        fig_unemp, ax_unemp = plt.subplots(figsize=(6,4))
+        fig_unemp, ax_unemp = plt.subplots(figsize=(6, 4))
         sns.scatterplot(
-            data=df_ws_feat.sample(n=min(1000,len(df_ws_feat)), random_state=2),
+            data=df_ws_feat.sample(n=min(1000, len(df_ws_feat)), random_state=2),
             x="Unemployment",
             y="WeeklySales",
             alpha=0.4,
@@ -386,7 +385,7 @@ def page():
         # ■ ❺ Boxplot: WeeklySales nach StoreSize-Klassen
         st.markdown("---")
         st.subheader("WeeklySales nach StoreSize")
-        fig_ss, ax_ss = plt.subplots(figsize=(6,4))
+        fig_ss, ax_ss = plt.subplots(figsize=(6, 4))
         sns.boxplot(
             data=df_ws_feat,
             x="StoreSize",
@@ -400,8 +399,6 @@ def page():
         st.pyplot(fig_ss)
         plt.close(fig_ss)
 
-
-
         return
 
     # ----------------------------------------
@@ -410,9 +407,9 @@ def page():
         st.title("3) HistoricalDemand Analyse")
         # Filter auswählen
         cats = sorted(df_demand["ProductCategory"].unique())
-        whs  = sorted(df_demand["WarehouseCode"].unique())
+        whs = sorted(df_demand["WarehouseCode"].unique())
         sel_cat = st.sidebar.multiselect("Kategorie auswählen", cats, default=cats[:3])
-        sel_wh  = st.sidebar.multiselect("Warehouse auswählen", whs, default=whs[:3])
+        sel_wh = st.sidebar.multiselect("Warehouse auswählen", whs, default=whs[:3])
         start2, end2 = st.sidebar.date_input(
             "Datumsspanne",
             [df_demand["Date"].min(), df_demand["Date"].max()],
@@ -424,7 +421,7 @@ def page():
             df_demand["ProductCategory"].isin(sel_cat)
             & df_demand["WarehouseCode"].isin(sel_wh)
             & df_demand["Date"].between(start2, end2)
-        ]
+            ]
         # ← **Neu**: OrderDemand in numerisch konvertieren, sonst rollende Mittelwerte etc. brechen
         df_hd["OrderDemand"] = pd.to_numeric(df_hd["OrderDemand"], errors="coerce").fillna(0)
 
@@ -489,7 +486,7 @@ def page():
             .unstack(fill_value=0)
         )
         mon_order = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
-                    "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+                     "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
         pivot = pivot.reindex(columns=mon_order)
 
         st.dataframe(pivot)  # Überblick
@@ -565,7 +562,6 @@ def page():
         st.pyplot(fig_corr)
         plt.close(fig_corr)
 
-
         return
     # ----------------------------------------
     # 5b) Datensatz-Vergleich (WeeklySales vs. OrderDemand)
@@ -574,13 +570,13 @@ def page():
         st.title("3) Vergleich WeeklySales ↔ OrderDemand")
 
         # 1) Aggregation  ►  monatliche Summen beider Datensätze
-        df_sales["YearMonth"]  = df_sales["Date"].dt.to_period("M").dt.to_timestamp()
+        df_sales["YearMonth"] = df_sales["Date"].dt.to_period("M").dt.to_timestamp()
         df_demand["YearMonth"] = df_demand["Date"].dt.to_period("M").dt.to_timestamp()
 
         df_demand["OrderDemand"] = pd.to_numeric(df_demand["OrderDemand"], errors="coerce").fillna(0)
 
-        sales_month   = df_sales.groupby("YearMonth")["WeeklySales"].sum()
-        demand_month  = df_demand.groupby("YearMonth")["OrderDemand"].sum()
+        sales_month = df_sales.groupby("YearMonth")["WeeklySales"].sum()
+        demand_month = df_demand.groupby("YearMonth")["OrderDemand"].sum()
 
         df_combo = pd.concat([sales_month, demand_month], axis=1).dropna()
         df_combo.columns = ["WeeklySales", "OrderDemand"]
@@ -599,7 +595,7 @@ def page():
 
         # 3) Scatter + Regressionslinie  ►  Zusammenhang der Monatssummen
         st.subheader("3.2 Scatter: OrderDemand vs. WeeklySales (Monat)")
-        fig_c2, ax_c2 = plt.subplots(figsize=(5,4))
+        fig_c2, ax_c2 = plt.subplots(figsize=(5, 4))
         sns.regplot(data=df_combo,
                     x="OrderDemand", y="WeeklySales",
                     scatter_kws=dict(alpha=0.4), ax=ax_c2)
@@ -610,7 +606,7 @@ def page():
 
         # 4) Korrelationstabelle
         st.subheader("3.3 Korrelation der Monatssummen")
-        corr_val = df_combo.corr().iloc[0,1]
+        corr_val = df_combo.corr().iloc[0, 1]
         st.write(f"Pearson-r = **{corr_val:.3f}**")
         st.table(df_combo.corr().round(3))
 
@@ -618,15 +614,15 @@ def page():
         st.subheader("3.4 Saisonaler Vergleich (Z-Score-Heatmap)")
         z_df = df_combo.apply(lambda s: (s - s.mean()) / s.std())
         z_df["Monat"] = z_df.index.month_name(locale="de_DE").str[:3]
-        z_df["Jahr"]  = z_df.index.year
+        z_df["Jahr"] = z_df.index.year
         pivot_z = z_df.pivot_table(index="Jahr", columns="Monat",
-                                values="WeeklySales")
+                                   values="WeeklySales")
         # gleiche Monatsreihenfolge
-        mon_order = ["Jan","Feb","Mär","Apr","Mai","Jun",
-                    "Jul","Aug","Sep","Okt","Nov","Dez"]
+        mon_order = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+                     "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
         pivot_z = pivot_z[mon_order]
 
-        fig_c3, ax_c3 = plt.subplots(figsize=(9,3))
+        fig_c3, ax_c3 = plt.subplots(figsize=(9, 3))
         sns.heatmap(pivot_z, cmap="coolwarm", center=0,
                     linewidths=.4, ax=ax_c3)
         ax_c3.set_title("Z-Score-Heatmap der WeeklySales\n"
@@ -634,9 +630,7 @@ def page():
         st.pyplot(fig_c3)
         plt.close(fig_c3)
 
-        return   # ⬅︎ wichtig: damit die Events-Sektion erst danach kommt
-
-
+        return  # ⬅︎ wichtig: damit die Events-Sektion erst danach kommt
 
     # ----------------------------------------
     # ----------------------------------------
@@ -647,10 +641,10 @@ def page():
 
         # 1) Manuelle Definition klassischer Feiertage
         events = {
-            "Super_Bowl":    ["2010-02-12", "2011-02-11", "2012-02-10"],
-            "Labor_Day":     ["2010-09-10", "2011-09-09", "2012-09-07"],
-            "Thanksgiving":  ["2010-11-26", "2011-11-25"],
-            "Christmas":     ["2010-12-31", "2011-12-30"]
+            "Super_Bowl": ["2010-02-12", "2011-02-11", "2012-02-10"],
+            "Labor_Day": ["2010-09-10", "2011-09-09", "2012-09-07"],
+            "Thanksgiving": ["2010-11-26", "2011-11-25"],
+            "Christmas": ["2010-12-31", "2011-12-30"]
         }
 
         # 2) Flags in df_ev setzen
@@ -663,16 +657,16 @@ def page():
         # 2) Statisch: Holiday-Effekt nach StoreType
         # --------------------------------------------------
         st.subheader("Holiday-Effekt nach StoreType")
-        df_ht = df_ev.merge(df_stores[["StoreID","StoreType"]],
+        df_ht = df_ev.merge(df_stores[["StoreID", "StoreType"]],
                             on="StoreID", how="left")
         holiday_names = list(events.keys())
         means = {
             hol: df_ht[df_ht[hol]].groupby("StoreType")["WeeklySales"].mean()
             for hol in holiday_names
         }
-        A_means = [means[hol].get("A",0) for hol in holiday_names]
-        B_means = [means[hol].get("B",0) for hol in holiday_names]
-        C_means = [means[hol].get("C",0) for hol in holiday_names]
+        A_means = [means[hol].get("A", 0) for hol in holiday_names]
+        B_means = [means[hol].get("B", 0) for hol in holiday_names]
+        C_means = [means[hol].get("C", 0) for hol in holiday_names]
 
         mean_hol = df_ht[df_ht["IsHoliday"]]["WeeklySales"].mean()
         mean_non = df_ht[~df_ht["IsHoliday"]]["WeeklySales"].mean()
@@ -681,24 +675,24 @@ def page():
         x = np.arange(len(holiday_names))
         width = 0.25
 
-        fig1, ax1 = plt.subplots(figsize=(8,4))
-        barsA = ax1.bar(x-width, A_means, width, label="Type A")
-        barsB = ax1.bar(x,      B_means, width, label="Type B")
-        barsC = ax1.bar(x+width, C_means, width, label="Type C")
+        fig1, ax1 = plt.subplots(figsize=(8, 4))
+        barsA = ax1.bar(x - width, A_means, width, label="Type A")
+        barsB = ax1.bar(x, B_means, width, label="Type B")
+        barsC = ax1.bar(x + width, C_means, width, label="Type C")
 
         ax1.set_xticks(x)
         ax1.set_xticklabels(holiday_names, rotation=45)
         ax1.set_ylabel("Avg WeeklySales")
-        ax1.axhline(mean_hol, color="red",   linestyle="--", label="Holiday Ø")
+        ax1.axhline(mean_hol, color="red", linestyle="--", label="Holiday Ø")
         ax1.axhline(mean_non, color="green", linestyle="--", label="Non-Holiday Ø")
-        ax1.legend(loc="upper left", bbox_to_anchor=(1,1))
+        ax1.legend(loc="upper left", bbox_to_anchor=(1, 1))
 
         for bars in (barsA, barsB, barsC):
             for r in bars:
                 h = r.get_height()
                 ax1.annotate(f"{h:,.0f}",
-                             xy=(r.get_x()+r.get_width()/2, h),
-                             xytext=(0,3), textcoords="offset points",
+                             xy=(r.get_x() + r.get_width() / 2, h),
+                             xytext=(0, 3), textcoords="offset points",
                              ha="center", va="bottom")
 
         st.pyplot(fig1)
@@ -726,7 +720,7 @@ def page():
             .sort_values(ascending=False)
             .reset_index()
         )
-        fig2, ax2 = plt.subplots(figsize=(6,3))
+        fig2, ax2 = plt.subplots(figsize=(6, 3))
         sns.barplot(data=overall, x="WeeklySales", y="Event", ax=ax2, palette="pastel")
         ax2.set_xlabel("Ø WeeklySales")
         ax2.set_title("Average WeeklySales pro Event")
@@ -735,7 +729,7 @@ def page():
         st.markdown("---")
 
         # 3b) Zeitreihe: WeeklySales über Zeit für ausgewählte Events & Non-Event
-        fig3, ax3 = plt.subplots(figsize=(10,4))
+        fig3, ax3 = plt.subplots(figsize=(10, 4))
         for ev in sel_events:
             ser = (df_ev[df_ev[ev]]
                    .groupby("Date")["WeeklySales"]
@@ -751,15 +745,14 @@ def page():
 
         ax3.set_xlabel("Datum")
         ax3.set_ylabel("Ø WeeklySales")
-        ax3.legend(loc="upper left", bbox_to_anchor=(1,1))
+        ax3.legend(loc="upper left", bbox_to_anchor=(1, 1))
         ax3.grid(True)
         st.pyplot(fig3)
 
         return
+
+
 page()
-
-
-
 
 # %%
 
