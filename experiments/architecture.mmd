@@ -1,0 +1,243 @@
+classDiagram
+%% package database
+    class data_loader {
+        + load_data(db_path)
+        + load_product_data(db_path)
+        + load_forecast_data(model, identifiers, table_suffix, last_date, periods, db_path)
+        + load_sales_forecast_data(model, store_id, dept_id, last_date, periods, db_path)
+        + load_products_forecast_data(model, wh_code, prod_code, cat_code, last_date, periods, db_path)
+        + load_full_forecast_data(model, table_suffix, db_path)
+        + load_full_sales_forecast_data(model, db_path)
+        + load_full_products_forecast_data(model, db_path)
+        + load_multi_forecast_data(models, identifiers, table_suffix, last_date, periods, db_path)
+        + load_multi_sales_forecast_data(models, store_id, last_date, periods, db_path)
+        + load_multi_products_forecast_data(models, wh_code, prod_code, cat_code, last_date, periods, db_path)
+    }
+    class data_utils {
+        + create_table_map(table_suffix)
+        + infer_sqlite_type(value)
+        + encode_identifiers(identifiers)
+        + decode_placeholders(df, identifiers)
+        + trim_forecast_df(forecast_df, last_date, periods)
+        + null_fallback(dtype)
+    }
+    class data_writer {
+        + save_prophet_forecast(forecast, identifiers, table_suffix, db_path)
+        + save_sales_prophet_forecast(forecast, store_id, dept_id, db_path)
+        + save_products_prophet_forecast(forecast, wh_code, prod_code, cat_code, db_path)
+        + save_arima_forecast(predictions, dates, identifiers, table_suffix, db_path, conf_int)
+        + save_sales_arima_forecast(predictions, dates, store_id, dept_id, db_path, conf_int)
+        + save_products_arima_forecast(predictions, dates, wh_code, prod_code, cat_code, db_path, conf_int)
+        + save_hw_forecast(predictions, dates, identifiers, table_suffix, db_path)
+        + save_sales_hw_forecast(predictions, dates, store_id, dept_id, db_path)
+        + save_products_hw_forecast(predictions, dates, wh_code, prod_code, cat_code, db_path)
+        + write_forecast(df, identifiers, table_name, db_path)
+    }
+    class import_product_db {
+        + drop()
+        + do_import()
+    }
+%% package experiments\forecast
+    class app_demand_forecast {
+        + get_available_combinations()
+    }
+    class app_demand_forecast_erweitert {
+        + get_available_combinations()
+    }
+    class apptest {
+        + calculate_kpis(df)
+        + get_available_combinations()
+    }
+    class apptestv2 {
+        + calculate_kpis(df)
+        + get_available_combinations()
+        + holt_winters_forecast(df, periods)
+    }
+    class arima_forecast
+    class arima_forecast_demand {
+        + arima_forecast_demand(product_code, warehouse_code)
+    }
+    class forecast_prophet
+    class forecaster_products {
+        + forecast_demand_prophet(df_hist, product_code, warehouse_code)
+    }
+    class lstm_forecast
+    class plot_forecast
+    class v1test {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + arima_forecast(df, periods)
+    }
+    class v2test {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+    }
+    class v3test {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+        + arima_forecast(df, periods)
+    }
+    class v3test_erweitert {
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+        + arima_forecast(df, periods)
+    }
+    class v4test_neu {
+        + calculate_kpis(df)
+        + load_sales_data()
+        + holt_winters_forecast(df, periods)
+        + generate_forecasts(df, periods, model_choices)
+    }
+    class v5test {
+        + calculate_kpis(df)
+        + load_sales_data()
+        + prophet_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+        + arima_forecast(df, periods)
+        + generate_forecasts(df, periods, model_choices)
+    }
+    class wetter {
+        + load_weather_sales_data()
+        + calculate_kpis(df)
+        + prophet_with_weather(df, periods, regressors)
+    }
+%% package experiments
+    class generate_mermaid {
+        + load_gitignore(root)
+        + find_py(root, spec)
+        + extract_methods(root, rel)
+        + extract_import_deps(root, files)
+        + main()
+    }
+    class import_db
+%% package .
+    class layout {
+        + render_footer()
+        + with_layout(title, show_footer)
+        + decorator(func)
+        + wrapper()
+    }
+    class main
+%% package logic\forcasting
+    class forecast_helper {
+        + calculate_kpis(df)
+        + get_available_combinations(df_hist, df_prod, df_cat)
+        + prepare_product_data(df_hist, identifiers)
+    }
+    class forecaster {
+        + prophet_forecast(df, periods)
+        + arima_forecast(df, periods)
+        + holt_winters_forecast(df, periods)
+        + run_sales_forecast(history, model_option, store_id, dept_id, periods)
+        + run_products_forecast(history, model_option, periods, wh_code, prod_code, cat_code)
+        + generate_sales_forecasts(df, periods, model_choices, store_id, dept_id)
+    }
+%% package logic\optimization
+    class helper {
+        + start_ui_status_updater(ui_status, status_queue, total)
+        + report_status(status_object, store_id, dept_id, label, state, expanded, details)
+        + update_status(ui_status, label, state, expanded, details, placeholder)
+        + get_default_cplex_path()
+        + create_solver(solver_timeout, cplex_path, multithreading, debug)
+        + updater()
+    }
+    class optimizations {
+        + run_single_store_dept_optimization(args)
+        + run_promotion_sales_optimization_all(df_sales, df_features, boost_max, decay_factor, recovery_rate, cost_rate, ui_status, parallel, solver_timeout)
+        + run_promotion_sales_optimization(df_sales, df_features, boost_max, decay_factor, recovery_rate, cost_rate, solver_timeout, store_id, dept_id, ui_status, parallel)
+        + remove_outliers(df)
+        + compute_boost_potential(base_sales, fallback_value, normalize)
+        + get_latest_previous_week(key, available_keys)
+        + create_data_row(store_id, dept_id, year, week, x, base_sales, dynamic_boost, boost_potential, promo_cost)
+        + safe_multiply()
+        + safe_add(a, b)
+    }
+    class visualizations {
+        + plot_promotion_optimization(df_solution)
+        + prepare_solution_data(df_solution)
+        + plot_sales_boost(df_dept, store_id, dept_id)
+    }
+%% package pages
+    class descriptive_analysis {
+        + page()
+    }
+    class util {
+        + do_prediction(models)
+        + page()
+    }
+    class welcome {
+        + page()
+    }
+%% package pages\forecast
+    class forecast_departments {
+        + page()
+    }
+    class forecast_products {
+        + _translate_identifiers(identifiers)
+        + _run_and_store_forecast(df, model_choice, periods, identifiers, status_ctx_kwargs)
+        + _show_metrics_and_chart(df_hist, df_forecast)
+        + page()
+    }
+    class forecast_stores {
+        + page()
+    }
+%% package pages\promotion_optimizer
+    class promo_optimizer_departments {
+        + page()
+    }
+    class promo_optimizer_stores {
+        + page()
+    }
+    class shared {
+        + init_session()
+        + create_promo_state(df_solution, status, run_opts, selected_stores, selected_depts, params)
+        + create_shared_parameters()
+        + create_params_state(promo_cost, promo_boost, promo_scaling, promo_decay, solver_timeout, use_prediction, selected_model)
+        + handle_optimization(df_sales, df_features, params, ui_status, parallel, selected_stores, selected_depts)
+        + run_optimization(df_sales, df_features, params, ui_status, parallel)
+        + create_results(df_solution, status, selected_stores, selected_depts, params)
+        + format_selection(selection)
+        + merge_forecast_with_sales(df_sales, df_pred)
+        + filter_sales(df_sales, selected_stores, selected_depts)
+    }
+    data_loader --> data_utils: use
+    data_writer --> data_utils: use
+    app_demand_forecast --> arima_forecast_demand: use
+    app_demand_forecast --> forecaster_products: use
+    app_demand_forecast_erweitert --> arima_forecast_demand: use
+    app_demand_forecast_erweitert --> forecaster_products: use
+    apptest --> arima_forecast_demand: use
+    apptest --> forecaster_products: use
+    forecaster --> data_loader: use
+    forecaster --> data_writer: use
+    optimizations --> helper: use
+    descriptive_analysis --> data_loader: use
+    descriptive_analysis --> layout: use
+    forecast_departments --> data_loader: use
+    forecast_departments --> layout: use
+    forecast_departments --> forecaster: use
+    forecast_products --> data_loader: use
+    forecast_products --> layout: use
+    forecast_products --> forecast_helper: use
+    forecast_products --> forecaster: use
+    forecast_stores --> data_loader: use
+    forecast_stores --> layout: use
+    forecast_stores --> forecast_helper: use
+    forecast_stores --> forecaster: use
+    promo_optimizer_departments --> data_loader: use
+    promo_optimizer_departments --> layout: use
+    promo_optimizer_departments --> shared: use
+    promo_optimizer_stores --> data_loader: use
+    promo_optimizer_stores --> layout: use
+    promo_optimizer_stores --> shared: use
+    shared --> data_loader: use
+    shared --> optimizations: use
+    shared --> visualizations: use
+    util --> data_loader: use
+    util --> import_product_db: use
+    util --> layout: use
+    util --> forecaster: use
+    welcome --> layout: use

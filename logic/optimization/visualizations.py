@@ -47,6 +47,7 @@ def plot_promotion_optimization(df_solution):
         ax.set_ylabel("Umsatz")
         ax.tick_params(axis='x', labelrotation=90)
         ax.legend(title="Typ")
+        ax.set_xmargin(0)
         fig.tight_layout()
 
         return fig

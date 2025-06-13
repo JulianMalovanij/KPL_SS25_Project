@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
 
-from data_loader import load_data  # liefert df_sales, df_features, df_stores
+from database.data_loader import load_data
 from layout import with_layout
 
 # Hinweis: st.set_page_config sollte in main.py stehen

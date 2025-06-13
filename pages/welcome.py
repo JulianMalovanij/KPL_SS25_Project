@@ -19,7 +19,7 @@ def page():
 
     st.header("📅 Verkaufsvorhersage")
     st.write("""
-        - 🤖 Erstelle Verkaufsprognosen mit verschiedenen Modellen wie **Prophet**, **ARIMA** oder **LSTM**.
+        - 🤖 Erstelle Verkaufsprognosen mit verschiedenen Modellen wie **Prophet**, **ARIMA** oder **Holt-Winters**.
         - 🗓️ Nutze die Vorhersagen zur Planung und Bestandsoptimierung.
         - 📊 Vergleiche die Modellgenauigkeiten.
         """)
@@ -35,7 +35,7 @@ def page():
 
     st.divider()
 
-    st.write("Alle Funktionen können über die übersichtlichen Navigation am linken Seitenrand erreicht werden.")
+    st.write("Alle Funktionen können über die übersichtliche Navigation am linken Seitenrand erreicht werden.")
 
 
 page()

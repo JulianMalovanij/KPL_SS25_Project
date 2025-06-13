@@ -5,15 +5,15 @@ import pandas as pd
 
 
 def drop():
-    Path("walmart.db").unlink(missing_ok=True)
+    Path("database/walmart.db").unlink(missing_ok=True)
 
 
 def do_import():
     # ----------------------------------------
     # 1) Verbindung zur SQLite-Datenbank öffnen
     # ----------------------------------------
-    # Wenn "walmart.db" noch nicht existiert, wird es neu angelegt.
-    DB_PATH = "walmart.db"
+    # Wenn "database/walmart.db" noch nicht existiert, wird es neu angelegt.
+    DB_PATH = "database/walmart.db"
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -26,12 +26,12 @@ def do_import():
     # print("Arbeitsverzeichnis:", os.getcwd())
 
     # 2.1) Ursprüngliche Walmart-Dateien
-    df_stores = pd.read_csv("data/stores.csv")  # Spalten: Store, Type, Size
-    df_features = pd.read_csv("data/features.csv")  # Spalten: Store, Date, Temperature, …, IsHoliday
-    df_train = pd.read_csv("data/train.csv")  # Spalten: Store, Dept, Date, Weekly_Sales, IsHoliday
+    df_stores = pd.read_csv("../data/stores.csv")  # Spalten: Store, Type, Size
+    df_features = pd.read_csv("../data/features.csv")  # Spalten: Store, Date, Temperature, …, IsHoliday
+    df_train = pd.read_csv("../data/train.csv")  # Spalten: Store, Dept, Date, Weekly_Sales, IsHoliday
 
     # 2.2) Neue Historical Demand-Datei
-    df_hist = pd.read_csv("data/product_demand.csv")
+    df_hist = pd.read_csv("../data/product_demand.csv")
     # Spalten: Product_Code, Warehouse, Product_Category, Date, Order_Demand
 
     # Datumsspalten in pandas-Datetime umwandeln
