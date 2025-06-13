@@ -19,7 +19,7 @@ def page():
     # 1) Daten laden
     # ----------------------------------------
     df_sales, df_features, df_stores = load_data()
-    conn = sqlite3.connect("walmart.db")
+    conn = sqlite3.connect("database/walmart.db")
     df_demand = pd.read_sql_query(
         "SELECT * FROM HistoricalDemand", conn, parse_dates=["Date"]
     )
