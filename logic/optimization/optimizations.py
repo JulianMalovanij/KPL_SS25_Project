@@ -65,7 +65,6 @@ def run_promotion_sales_optimization_all(df_sales, df_features,
     args = [(store_id, dept_id, df_sales, df_features, params, status_queue) for store_id, dept_id in
             unique_pairs]
 
-    print("Event")
     stop_event = start_ui_status_updater(ui_status, status_queue, total)
 
     if parallel:
