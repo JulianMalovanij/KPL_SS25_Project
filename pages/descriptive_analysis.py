@@ -634,7 +634,6 @@ def page():
         return  # ⬅︎ wichtig: damit die Events-Sektion erst danach kommt
 
     # ----------------------------------------
-    # ----------------------------------------
     # 6) Events Analyse
     # ----------------------------------------
     if section == "Events & Store-Typ":
