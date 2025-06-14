@@ -26,7 +26,7 @@ def page():
     section = st.sidebar.radio(
         "Analyse-Bereich:",
         ["Datenübersicht", "WeeklySales", "HistoricalDemand",
-         "Datensatz-Vergleich", "Events"]  # ⬅︎ neu
+         "Datensatz-Vergleich", "Events & Store-Typ"]  # ⬅︎ neu
     )
 
     df_demand["OrderDemand"] = pd.to_numeric(
@@ -118,7 +118,7 @@ def page():
         sns.histplot(df_ws['WeeklySales'], bins=30, kde=True, ax=ax1)
         ax1.set_title('Histogramm WeeklySales')
         ax1.set_xmargin(0)
-        st.pyplot(fig1)
+        st.pyplot(fig1,  use_container_width=False, bbox_inches="tight")
 
         # Bivariate: Zeitreihe pro Store/Dept
         st.subheader("Bivariate: Zeitreihe nach Store/Dept")
@@ -139,7 +139,7 @@ def page():
         ax2.legend(loc='upper left', bbox_to_anchor=(1, 1))
         ax2.grid(True)
         ax2.set_xmargin(0)
-        st.pyplot(fig2)
+        st.pyplot(fig2,  use_container_width=False, bbox_inches="tight")
 
         st.markdown("---")
         st.subheader("Boxplot: WeeklySales pro StoreType")
@@ -152,7 +152,7 @@ def page():
         ax3.set_xlabel("StoreType")
         ax3.set_ylabel("WeeklySales")
         ax3.set_title("Verteilung der WeeklySales nach StoreType")
-        st.pyplot(fig3)
+        st.pyplot(fig3,  use_container_width=False, bbox_inches="tight")
         plt.close(fig3)
 
         # ------------------------------------------------------------------
@@ -187,7 +187,7 @@ def page():
         ax_m.set_ylabel("Ø WeeklySales")
         ax_m.set_title("Ø WeeklySales pro Monat")
         plt.xticks(rotation=45, ha="right")
-        st.pyplot(fig_m)
+        st.pyplot(fig_m,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_m)
 
         # ------------------------------------------------------------------
@@ -211,7 +211,7 @@ def page():
         ax5.set_xlabel("Monat")
         ax5.set_ylabel("StoreID")
         ax5.set_title("Summe WeeklySales pro Store & Monat")
-        st.pyplot(fig5)
+        st.pyplot(fig5,  use_container_width=False, bbox_inches="tight")
         plt.close(fig5)
 
         # ------------------------------------------------------------------
@@ -241,7 +241,7 @@ def page():
         ax6.set_ylabel("WeeklySales")
         ax6.set_title("Zusammenhang: Temperatur vs. WeeklySales")
         ax6.set_xmargin(0)
-        st.pyplot(fig6)
+        st.pyplot(fig6,  use_container_width=False, bbox_inches="tight")
         plt.close(fig6)
 
         # ------------------------------------------------------------------
@@ -281,7 +281,7 @@ def page():
             ax=ax_corr
         )
         ax_corr.set_title("Korrelationen zwischen WeeklySales & numerischen Features")
-        st.pyplot(fig_corr)
+        st.pyplot(fig_corr,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_corr)
 
         # ------------------------------------------------------------------
@@ -304,7 +304,7 @@ def page():
             diag_kind="kde",
             plot_kws=dict(alpha=0.3, s=20)
         )
-        st.pyplot(fig_pair.figure)
+        st.pyplot(fig_pair.figure,  use_container_width=False, bbox_inches="tight")
         plt.close("all")
 
         # ------------------------------------------------------------------
@@ -346,7 +346,7 @@ def page():
         ax_hol.set_xlabel("")
         ax_hol.set_ylabel("Ø WeeklySales")
         ax_hol.set_title("Durchschnittlicher Umsatz: Feiertag vs. Normal")
-        st.pyplot(fig_hol)
+        st.pyplot(fig_hol,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_hol)
 
         # ■ ❸ Scatter: WeeklySales vs. CPI
@@ -362,7 +362,7 @@ def page():
         ax_cpi.set_xlabel("Consumer Price Index (CPI)")
         ax_cpi.set_ylabel("WeeklySales")
         ax_cpi.set_xmargin(0)
-        st.pyplot(fig_cpi)
+        st.pyplot(fig_cpi,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_cpi)
 
         # ■ ❹ Scatter: WeeklySales vs. Unemployment
@@ -377,7 +377,7 @@ def page():
         ax_unemp.set_title("WeeklySales vs. Unemployment Rate")
         ax_unemp.set_xlabel("Unemployment Rate")
         ax_unemp.set_ylabel("WeeklySales")
-        st.pyplot(fig_unemp)
+        st.pyplot(fig_unemp,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_unemp)
 
         # ■ ❺ Boxplot: WeeklySales nach StoreSize-Klassen
@@ -394,7 +394,7 @@ def page():
         ax_ss.set_title("Verteilung der WeeklySales nach StoreSize")
         ax_ss.set_xlabel("StoreSize")
         ax_ss.set_ylabel("WeeklySales")
-        st.pyplot(fig_ss)
+        st.pyplot(fig_ss,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_ss)
 
         return
@@ -429,7 +429,7 @@ def page():
         ax1.set_xlabel("Bestellmenge")
         ax1.set_ylabel("Häufigkeit")
         ax1.set_xmargin(0)
-        st.pyplot(fig1)
+        st.pyplot(fig1,  use_container_width=False, bbox_inches="tight")
         plt.close(fig1)
 
         st.markdown("### 3.2 Monatliche Summe + 6-Monats-Ø")
@@ -446,7 +446,7 @@ def page():
         ax2.legend()
         ax2.set_xmargin(0)
         plt.xticks(rotation=45, ha="right")
-        st.pyplot(fig2)
+        st.pyplot(fig2,  use_container_width=False, bbox_inches="tight")
         plt.close(fig2)
 
         # ------------------------------------------------------------------------
@@ -503,7 +503,7 @@ def page():
         ax3.set_xlabel("Monat")
         ax3.set_ylabel("Warehouse")
         ax3.set_title("OrderDemand pro Warehouse & Monat")
-        st.pyplot(fig3)
+        st.pyplot(fig3,  use_container_width=False, bbox_inches="tight")
         plt.close(fig3)
 
         # ------------------------------------------------------------------------
@@ -530,7 +530,7 @@ def page():
         ax4.set_title("Top-10 Produkte nach OrderDemand")
         ax4.set_xlabel("Summe OrderDemand")
         ax4.set_ylabel("ProductCode")
-        st.pyplot(fig4)
+        st.pyplot(fig4,  use_container_width=False, bbox_inches="tight")
         plt.close(fig4)
 
         # ------------------------------------------------------------------------
@@ -559,7 +559,7 @@ def page():
             ax=ax_corr
         )
         ax_corr.set_title("Korrelationen: OrderDemand & kodierte Kategorien")
-        st.pyplot(fig_corr)
+        st.pyplot(fig_corr,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_corr)
 
         return
@@ -601,7 +601,7 @@ def page():
                     scatter_kws=dict(alpha=0.4), ax=ax_c2)
         ax_c2.set_xlabel("OrderDemand (Summe je Monat)")
         ax_c2.set_ylabel("WeeklySales (Summe je Monat)")
-        st.pyplot(fig_c2)
+        st.pyplot(fig_c2,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_c2)
 
         # 4) Korrelationstabelle
@@ -627,8 +627,9 @@ def page():
                     linewidths=.4, ax=ax_c3)
         ax_c3.set_title("Z-Score-Heatmap der WeeklySales\n"
                         "(rot = überdurchschnittlich, blau = unterdurchschnittlich)")
-        st.pyplot(fig_c3)
+        st.pyplot(fig_c3,  use_container_width=False, bbox_inches="tight")
         plt.close(fig_c3)
+
 
         return  # ⬅︎ wichtig: damit die Events-Sektion erst danach kommt
 
@@ -636,8 +637,8 @@ def page():
     # ----------------------------------------
     # 6) Events Analyse
     # ----------------------------------------
-    if section == "Events":
-        st.title("4) Events Analyse")
+    if section == "Events & Store-Typ":
+        st.markdown("## 4) Events-Analyse und Store-Typ")
 
         # 1) Manuelle Definition klassischer Feiertage
         events = {
@@ -656,7 +657,56 @@ def page():
         # --------------------------------------------------
         # 2) Statisch: Holiday-Effekt nach StoreType
         # --------------------------------------------------
-        st.subheader("Holiday-Effekt nach StoreType")
+        # ─────────────────────────────────────────────────────────────
+        # Store-Typ-Übersicht (Pie + Box-Plot)
+        # ─────────────────────────────────────────────────────────────
+        st.markdown("### 4.1 Store-Typ-Struktur")
+
+        # ▸ 1) Kreisdiagramm: Anteil A / B / C
+        type_counts = (
+            df_stores["StoreType"]
+            .value_counts()
+            .reindex(["A", "B", "C"])            # feste Reihenfolge
+            .fillna(0)
+        )
+
+        fig_pie, ax_pie = plt.subplots(figsize=(2.8, 2.8))
+        ax_pie.pie(
+            type_counts,
+            labels=type_counts.index.map(lambda t: f"Type {t}"),
+            autopct="%1.1f %%",
+            textprops={"fontsize": 12},
+            startangle=90,
+            colors=sns.color_palette("Set2")[: len(type_counts)],
+        )
+        ax_pie.set_title("Anteil der Store-Typen", fontsize=13)
+        ax_pie.axis("equal")
+        st.pyplot(fig_pie, use_container_width=False, bbox_inches="tight")
+        plt.close(fig_pie)
+
+        # ▸ 2) Box-Plot: StoreSize pro Typ
+        st.markdown("### StoreSize nach Store-Typ")
+
+        fig_box, ax_box = plt.subplots(figsize=(4, 2.8))
+        sns.boxplot(
+            data=df_stores,
+            x="StoreType",
+            y="StoreSize",
+            palette="Set2",
+            order=["A", "B", "C"],
+            ax=ax_box,
+            showfliers=False,
+        )
+        ax_box.set_xlabel("Store-Typ")
+        ax_box.set_ylabel("StoreSize")
+        ax_box.set_title("Verteilung der Verkaufsfläche je Typ")
+        st.pyplot(fig_box, use_container_width=False, bbox_inches="tight")
+        plt.close(fig_box)
+        # ─────────────────────────────────────────────────────────────
+        st.markdown("### 4.2 Event-Analyse")
+        st.subheader("Holiday-Effekt nach Store-Typ")
+
+       
         df_ht = df_ev.merge(df_stores[["StoreID", "StoreType"]],
                             on="StoreID", how="left")
         holiday_names = list(events.keys())
@@ -695,7 +745,7 @@ def page():
                              xytext=(0, 3), textcoords="offset points",
                              ha="center", va="bottom")
 
-        st.pyplot(fig1)
+        st.pyplot(fig1,  use_container_width=False, bbox_inches="tight")
         st.markdown("---")
 
         # --------------------------------------------------
@@ -724,7 +774,7 @@ def page():
         sns.barplot(data=overall, x="WeeklySales", y="Event", ax=ax2, palette="pastel")
         ax2.set_xlabel("Ø WeeklySales")
         ax2.set_title("Average WeeklySales pro Event")
-        st.pyplot(fig2)
+        st.pyplot(fig2,  use_container_width=False, bbox_inches="tight")
 
         st.markdown("---")
 
@@ -748,7 +798,7 @@ def page():
         ax3.legend(loc="upper left", bbox_to_anchor=(1, 1))
         ax3.grid(True)
         ax3.set_xmargin(0)
-        st.pyplot(fig3)
+        st.pyplot(fig3, use_container_width=False, bbox_inches="tight")
 
         return
 
