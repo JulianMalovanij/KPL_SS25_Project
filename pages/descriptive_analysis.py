@@ -26,7 +26,7 @@ def page():
     section = st.sidebar.radio(
         "Analyse-Bereich:",
         ["Datenübersicht", "WeeklySales", "HistoricalDemand",
-         "Datensatz-Vergleich", "Events & Store-Typ"]  # ⬅︎ neu
+            "Events & Store-Typ"]  # ⬅︎ neu
     )
 
     df_demand["OrderDemand"] = pd.to_numeric(
@@ -566,7 +566,7 @@ def page():
     # ----------------------------------------
     # 5b) Datensatz-Vergleich (WeeklySales vs. OrderDemand)
     # ----------------------------------------
-    if section == "Datensatz-Vergleich":
+    #if section == "Datensatz-Vergleich":
         st.title("3) Vergleich WeeklySales ↔ OrderDemand")
 
         # 1) Aggregation  ►  monatliche Summen beider Datensätze
